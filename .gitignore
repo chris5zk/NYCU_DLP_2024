@@ -1,3 +1,9 @@
+# my ignore
+dataset/
+checkpoint/
+weight/
+log/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

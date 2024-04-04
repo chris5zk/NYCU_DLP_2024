@@ -16,9 +16,10 @@ class vgg19(nn.Module):
         self.linear = nn.Sequential(
             nn.Flatten(),
             nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(inplace=True),
             nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
             nn.Linear(4096, num_classes),
-            nn.Softmax()
         )
         
     def build_layer(self, in_channels, out_channels, conv_nums):
@@ -31,6 +32,7 @@ class vgg19(nn.Module):
         # rest conv. layer
         for _ in range(conv_nums-1):
             layers.append(nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1))
+            layers.append(nn.BatchNorm2d(out_channels))
             layers.append(nn.ReLU(inplace=True))
         
         # max-pooling layer

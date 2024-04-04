@@ -3,8 +3,8 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms.v2 import  (Compose, RandomRotation, RandomHorizontalFlip, RandomVerticalFlip,
-                                        ColorJitter, ToImageTensor, ConvertImageDtype, Normalize)
-
+                                        ColorJitter, ToTensor, ConvertImageDtype, Normalize)
+from logger import logger
 
 def getData(root, mode):
     df = pd.read_csv(root + f'/{mode}.csv')
@@ -24,18 +24,18 @@ class ButterflyMothDataset(Dataset):
                 RandomHorizontalFlip(0.5),
                 RandomVerticalFlip(0.5),
                 ColorJitter(0.5, 0.5, 0.5, 0.25),
-                ToImageTensor(),
+                ToTensor(),
                 ConvertImageDtype(torch.float32),
                 Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
         elif mode == 'valid' or mode == 'test':
             self.transform = Compose([
-                ToImageTensor(),
+                ToTensor(),
                 ConvertImageDtype(torch.float32),
                 Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
             
-        print("> Found %d images..." % (len(self.img_path)))  
+        logger.info("> Found %d images (%s)..." % (len(self.img_path), mode))  
 
     def __len__(self):
         return len(self.img_path)
