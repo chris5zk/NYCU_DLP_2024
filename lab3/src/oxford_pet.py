@@ -53,21 +53,19 @@ class OxfordPetDataset(torch.utils.data.Dataset):
                 if random.random() > 0.5:
                     image = TF.vflip(image)
                     mask = TF.vflip(mask)
-                # transform
-                transform = v2.Compose([                  
-                        v2.ToTensor(),
-                        v2.Resize((256, 256)),
-                        v2.ConvertImageDtype(torch.float32),
-                        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                    ])             
-            elif self.mode == 'valid' or self.mode == 'test':
-                transform = v2.Compose([                 
-                        v2.ToTensor(),
-                        v2.Resize((256, 256)),
-                        v2.ConvertImageDtype(torch.float32),
-                        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                    ])
-            sample = dict(image=transform(image), mask=transform(mask))
+            # transform      
+            image_transform = v2.Compose([                 
+                v2.ToTensor(),
+                v2.Resize((256, 256)),
+                v2.ConvertImageDtype(torch.float32),
+                v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+            mask_transform = v2.Compose([
+                v2.ToTensor(),
+                v2.Resize((256, 256)),
+                v2.ConvertImageDtype(torch.float32)
+            ])
+            sample = dict(image=image_transform(image), mask=mask_transform(mask))
         else:
             sample = dict(image=image, mask=mask)
         return sample
