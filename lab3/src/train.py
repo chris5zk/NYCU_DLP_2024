@@ -101,12 +101,12 @@ def train(cfg, model, train_set, valid_set):
             torch.save(model.state_dict(), weight_path)
             print(f'> Save the model weight at {weight_path}')
             
-            plot_path = f'/{cfg.model}_epoch{epoch}_acc.png'
+            plot_path = f'./{cfg.model}_epoch{epoch}_acc.png'
             plt.title(f'{cfg.model} performance'), plt.ylabel('accuracy'), plt.xlabel('epoch')
             plt.plot(range(1, epoch + 1), train_epoch_acc, 'b', label='Training acc')
             plt.plot(range(1, epoch + 1), val_epoch_acc, 'r', label='Validation acc')
             plt.legend(loc='lower right')
-            plt.savefig(f'/{cfg.model}_epoch{epoch}_acc.png')
+            plt.savefig(plot_path)
             plt.clf()
             print(f'> Save the plot of the accuracy in {plot_path}')          
         
