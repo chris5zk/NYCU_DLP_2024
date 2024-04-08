@@ -109,7 +109,7 @@ def train(cfg, model, train_set, valid_set):
             print(f'> Save the plot of the accuracy in {plot_path}')          
         
         if epoch % cfg.save_ckpt == 0:
-            path = f'./checkpoint/{cfg.model}_epoch{epoch}.ckpt'
+            path = f'./saved_models/checkpoint/{cfg.model}_epoch{epoch}.ckpt'
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),

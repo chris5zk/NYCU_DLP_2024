@@ -22,3 +22,4 @@ if __name__ == '__main__':
     criterion = DICEloss()
     score = criterion(x, y)
     print(score)
+    print(1 - score)
