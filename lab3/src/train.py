@@ -1,4 +1,5 @@
 import os
+import math
 import time
 import torch
 import argparse
@@ -65,6 +66,7 @@ def train(cfg, model, train_set, valid_set):
             
             y_pred = model(x)
             loss = criterion(y_pred, y)
+            score = 1 - loss
             
             # optimize
             optimizer.zero_grad()
@@ -73,10 +75,11 @@ def train(cfg, model, train_set, valid_set):
             
             # performance
             total_loss += loss
-            total_acc += (1 - criterion(y_pred, y))
+            total_acc += score
+            print(loss, score)
             
-        training_loss = total_loss / len(train_dataset)
-        training_acc = total_acc / len(train_dataset)
+        training_loss = total_loss / math.ceil(len(train_dataset) / cfg.batch_size)
+        training_acc = total_acc / math.ceil(len(train_dataset) / cfg.batch_size)
         
         train_epoch_loss.append(training_loss)
         train_epoch_acc.append(training_acc)
@@ -139,7 +142,7 @@ def get_args():
     
     parser.add_argument('--lr', type=float, default=1e-5, help='learning rate')
     parser.add_argument('--epochs', '-e', type=int, default=10, help='number of epochs')
-    parser.add_argument('--batch_size', '-b', type=int, default=1, help='batch size')
+    parser.add_argument('--batch_size', '-b', type=int, default=2, help='batch size')
     parser.add_argument('--num_workers', '-nw', type=int, default=0 ,help='number of workers')
     parser.add_argument('--device', '-d', type=str, default='cuda:0', help='device for training')
     
