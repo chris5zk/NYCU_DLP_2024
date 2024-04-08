@@ -8,7 +8,7 @@ class DICEloss(nn.Module):
         self.eps = 1e-5
         
     def forward(self, pred, target):
-        pred, target = pred.float(), target.float()
+        print(pred, target)
         intersection = 2 * torch.sum(pred * target) + self.eps
         union = torch.sum(pred) + torch.sum(target) + self.eps
         loss = 1 - intersection / union

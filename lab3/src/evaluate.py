@@ -1,3 +1,4 @@
+import math
 import torch
 
 def evaluate(model, cfg, valid_dataset, valid_dataloader, criterion):
@@ -9,11 +10,12 @@ def evaluate(model, cfg, valid_dataset, valid_dataloader, criterion):
 
             y_pred = model(x)
             loss = criterion(y_pred, y)
+            score = 1 - loss
 
             total_loss += loss
-            total_acc += torch.sum(((y_pred > 0.5) * 1) * y) / torch.sum(y)
+            total_acc += score
 
-    valid_loss = total_loss / len(valid_dataset)
-    valid_acc = total_acc / len(valid_dataset)
+    valid_loss = total_loss / math.ceil(len(valid_dataset) / cfg.batch_size)
+    valid_acc = total_acc / math.ceil(len(valid_dataset) / cfg.batch_size)
     
     return valid_loss, valid_acc
