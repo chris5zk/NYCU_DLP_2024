@@ -4,4 +4,4 @@
 
 ## Lab2: Butterfly & Moth classification
 
-## Lab3: Segmentation
+## Lab3: Binary Semantic Segmentation

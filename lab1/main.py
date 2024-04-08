@@ -10,12 +10,6 @@
     - different optimizers, different activation functions, convolutional layers
 """
 
-"""
-hidden_layer (num, inp_dims, out_dims, size)
-percptron (?)
-Net ()
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 
