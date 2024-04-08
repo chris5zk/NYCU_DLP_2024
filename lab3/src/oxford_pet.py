@@ -16,7 +16,7 @@ import torchvision.transforms.functional as TF
 
 
 class OxfordPetDataset(torch.utils.data.Dataset):
-    def __init__(self, root, mode="train", transform=False):
+    def __init__(self, root, mode="train", transform=None):
 
         assert mode in {"train", "valid", "test"}
 
@@ -41,26 +41,25 @@ class OxfordPetDataset(torch.utils.data.Dataset):
         image = np.array(Image.open(image_path).convert("RGB"))
         trimap = np.array(Image.open(mask_path))
         mask = self._preprocess_mask(trimap)
-        
-        if self.transform is not None:
+
+        if self.transform:
+            image, mask = Image.fromarray(image), Image.fromarray(mask)
             if self.mode == 'train':
                 # Random Horizontal Flip
                 if random.random() > 0.5:
                     image = TF.hflip(image)
                     mask = TF.hflip(mask)
-
                 # Random Vertical Flip
                 if random.random() > 0.5:
                     image = TF.vflip(image)
                     mask = TF.vflip(mask)
-                
+                # transform
                 transform = v2.Compose([                  
                         v2.ToTensor(),
                         v2.Resize((256, 256)),
                         v2.ConvertImageDtype(torch.float32),
                         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                    ])
-                
+                    ])             
             elif self.mode == 'valid' or self.mode == 'test':
                 transform = v2.Compose([                 
                         v2.ToTensor(),
@@ -68,8 +67,9 @@ class OxfordPetDataset(torch.utils.data.Dataset):
                         v2.ConvertImageDtype(torch.float32),
                         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
                     ])
-                
-        sample = dict(image=transform(image), mask=transform(mask))
+            sample = dict(image=transform(image), mask=transform(mask))
+        else:
+            sample = dict(image=image, mask=mask)
         return sample
 
     @staticmethod
@@ -155,12 +155,14 @@ def extract_archive(filepath):
 
 def load_dataset(data_path, mode, data_augentation=False):
     if data_augentation:
-        return OxfordPetDataset(data_path, mode)
+        print('> Using data augmentation')
+        return OxfordPetDataset(data_path, mode, transform=data_augentation)
     else:
+        print('> Use simple dataset')
         return SimpleOxfordPetDataset(data_path, mode)
 
 if __name__ == '__main__':
-    dataset = load_dataset('./dataset/oxford-iiit-pet', 'test', data_augentation=True)
+    dataset = load_dataset('./dataset/oxford-iiit-pet', 'test', data_augentation=False)
     dataloader = DataLoader(dataset, batch_size=8, num_workers=0, shuffle=False)
     
     for data in dataloader:
