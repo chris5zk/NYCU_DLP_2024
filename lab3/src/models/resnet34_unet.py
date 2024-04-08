@@ -7,13 +7,13 @@ class resnet34_unet(nn.Module):
         super(resnet34_unet, self).__init__()
         
         # encoder
-        self.enc_conv1 = self._double_conv(3, 64)
+        self.enc_conv1 = self._residual_block(3, 64, 3)
         self.down1 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.enc_conv2 = self._double_conv(64, 128)
+        self.enc_conv2 = self._residual_block(64, 128, 4)
         self.down2 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.enc_conv3 = self._double_conv(128, 256)
+        self.enc_conv3 = self._residual_block(128, 256, 6)
         self.down3 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.enc_conv4 = self._double_conv(256, 512)
+        self.enc_conv4 = self._residual_block(256, 512, 3)
         self.down4 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         
         # bottle_neck
@@ -34,17 +34,27 @@ class resnet34_unet(nn.Module):
         self.sigmoid = nn.Sigmoid()
     
     def _double_conv(self, in_channels, out_channels):
-            return nn.Sequential(
-                    nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(out_channels),
-                    nn.ReLU(),
-                    nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(out_channels),
-                    nn.ReLU()
-                )
+        return nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
     
-    def basic_block(self, in_channels, out_channels):
-        return
+    def _residual_block(self, in_channels, out_channels, conv_nums):
+        layers = []
+        layers.append(nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1))
+        layers.append(nn.BatchNorm2d(out_channels))
+        layers.append(nn.ReLU())
+        
+        for _ in range(1, conv_nums):
+            layers.append(nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1))
+            layers.append(nn.BatchNorm2d(out_channels))
+            layers.append(nn.ReLU())
+            
+        return nn.Sequential(*layers)
     
     def forward(self, x):
         x1 = self.enc_conv1(x)

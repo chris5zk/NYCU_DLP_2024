@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from utils import DICEloss
 from evaluate import evaluate
 from models.unet import UNet
+from models.resnet34_unet import resnet34_unet
 from oxford_pet import load_dataset
 
 
@@ -162,7 +163,7 @@ if __name__ == "__main__":
     print('----------------------------------------')
     
     # model
-    model = UNet()
+    model = UNet() if args.model == 'unet' else resnet34_unet()
     model = model.to(device=args.device)
     
     # dataset
