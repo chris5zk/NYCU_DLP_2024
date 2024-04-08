@@ -85,8 +85,8 @@ def train(cfg, model, train_set, valid_set):
         
         # validate
         valid_loss, valid_acc = evaluate(model, cfg, valid_dataset, valid_dataloader, criterion)
-        val_epoch_loss.append(valid_loss)
-        val_epoch_acc.append(valid_acc)
+        val_epoch_loss.append(valid_loss.cpu().detach().numpy())
+        val_epoch_acc.append(valid_acc.cpu().detach().numpy())
         
         print('Epoch {}/{} > training loss: {:.4f}, training acc: {:.4f}, valid loss: {:.4f}, valid acc: {:.4f}, duration: {:.4f}'
                 .format(epoch, cfg.epochs, training_loss, training_acc, valid_loss, valid_acc, time.time() - epoch_start))
