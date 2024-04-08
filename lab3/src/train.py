@@ -74,8 +74,8 @@ def train(cfg, model, train_set, valid_set):
             optimizer.step()
             
             # performance
-            total_loss += loss.cpu()
-            total_acc += score.cpu()
+            total_loss += loss.cpu().detach().numpy()
+            total_acc += score.cpu().detach().numpy()
         
         training_loss = total_loss / math.ceil(len(train_dataset) / cfg.batch_size)
         training_acc = total_acc / math.ceil(len(train_dataset) / cfg.batch_size)
