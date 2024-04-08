@@ -21,7 +21,7 @@ def train(cfg, model, train_set, valid_set):
     train_epoch_acc, val_epoch_acc = [], []
     
     os.makedirs('./saved_models/weight', exist_ok=True)
-    os.makedirs('./saved_models/checkpoints', exist_ok=True)
+    os.makedirs('./saved_models/checkpoint', exist_ok=True)
     
     # dataset, dataloader
     train_dataset, train_dataloader = train_set

@@ -8,14 +8,10 @@ class DICEloss(nn.Module):
         self.eps = 1e-5
         
     def forward(self, pred, target):
-        pred = pred.contiguous()
-        target = target.contiguous()
-
-        intersection = (pred * target).sum(dim=2).sum(dim=2)
-
-        loss = (1 - ((2. * intersection + self.eps) / (pred.sum(dim=2).sum(dim=2) + target.sum(dim=2).sum(dim=2) + self.eps)))
-        
-        return loss.mean()
+        intersection = 2 * torch.sum(pred * target) + self.eps
+        union = torch.sum(pred) + torch.sum(target) + self.eps
+        loss = 1 - intersection / union
+        return loss
     
 
 if __name__ == '__main__':
