@@ -155,6 +155,10 @@ def get_args():
 if __name__ == "__main__":
     # hyperparameters
     args = get_args()
+    print('> Hyperparamer')
+    print('> model - {}, epochs - {}, lr - {}, batch_size - {}, num_workers - {}, device - {}'
+            .format(args.model, args.epochs, args.lr, args.batch_size, args.num_workers, args.device))
+    print('> save_weight - {}, save_ckpt - {}'.format(args.save_weight, args.save_ckpt))
     
     # model
     model = UNet()
