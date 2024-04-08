@@ -76,7 +76,6 @@ def train(cfg, model, train_set, valid_set):
             # performance
             total_loss += loss
             total_acc += score
-            print(loss, score)
             
         training_loss = total_loss / math.ceil(len(train_dataset) / cfg.batch_size)
         training_acc = total_acc / math.ceil(len(train_dataset) / cfg.batch_size)
