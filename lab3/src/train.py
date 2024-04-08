@@ -82,7 +82,7 @@ def train(cfg, model, train_set, valid_set):
         train_epoch_acc.append(training_acc)
         
         # validate
-        valid_loss, valid_acc = evaluate(model, valid_set, cfg.device)
+        valid_loss, valid_acc = evaluate(model, cfg, valid_dataset, valid_dataloader, criterion)
         val_epoch_loss.append(valid_loss)
         val_epoch_acc.append(valid_acc)
         
