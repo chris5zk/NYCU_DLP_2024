@@ -133,6 +133,7 @@ def get_args():
     
     # dataset
     parser.add_argument('--data_path', type=str, default='./dataset/oxford-iiit-pet', help='path of the input data')
+    parser.add_argument('--data_augmentation', '-da', action='store_true', help='use data augmentation or not')
     
     # training
     parser.add_argument('--ckpt_use', '-cu', action='store_true', help='use checkpoint for training or not')
@@ -160,10 +161,10 @@ if __name__ == "__main__":
     model = model.to(device=args.device)
     
     # dataset
-    train_dataset = load_dataset(args.data_path, 'train', data_augentation=False)
+    train_dataset = load_dataset(args.data_path, 'train', data_augentation=args.data_augmentation)
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
     
-    valid_dataset = load_dataset(args.data_path, 'valid', data_augentation=False)
+    valid_dataset = load_dataset(args.data_path, 'valid', data_augentation=args.data_augmentation)
     valid_dataloader = DataLoader(valid_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
     
     train_set = (train_dataset, train_dataloader)
