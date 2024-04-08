@@ -73,7 +73,7 @@ def train(cfg, model, train_set, valid_set):
             
             # performance
             total_loss += loss
-            total_acc += torch.sum(((y_pred > 0.5) * 1) * y) / torch.sum(y)
+            total_acc += (1 - criterion(y_pred, y))
             
         training_loss = total_loss / len(train_dataset)
         training_acc = total_acc / len(train_dataset)
@@ -138,13 +138,13 @@ def get_args():
     parser.add_argument('--history', action='store_true', help='keep loss history')
     
     parser.add_argument('--lr', type=float, default=1e-5, help='learning rate')
-    parser.add_argument('--epochs', '-e', type=int, default=200, help='number of epochs')
+    parser.add_argument('--epochs', '-e', type=int, default=10, help='number of epochs')
     parser.add_argument('--batch_size', '-b', type=int, default=1, help='batch size')
     parser.add_argument('--num_workers', '-nw', type=int, default=0 ,help='number of workers')
     parser.add_argument('--device', '-d', type=str, default='cuda:0', help='device for training')
     
-    parser.add_argument('--save_weight', type=int, default=50, help='epoch interval of saving model weight')
-    parser.add_argument('--save_ckpt', type=int, default=20, help='epoch interval of saving checkpoint')
+    parser.add_argument('--save_weight', type=int, default=5, help='epoch interval of saving model weight')
+    parser.add_argument('--save_ckpt', type=int, default=2, help='epoch interval of saving checkpoint')
     
     return parser.parse_args()
 

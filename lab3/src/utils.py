@@ -14,6 +14,7 @@ class DICEloss(nn.Module):
         intersection = (pred * target).sum(dim=2).sum(dim=2)
 
         loss = (1 - ((2. * intersection + self.eps) / (pred.sum(dim=2).sum(dim=2) + target.sum(dim=2).sum(dim=2) + self.eps)))
+        
         return loss.mean()
     
 
