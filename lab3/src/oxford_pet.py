@@ -2,6 +2,7 @@ import warnings
 warnings.simplefilter("ignore", UserWarning)
 
 import os
+import random
 import torch
 import shutil
 import numpy as np
@@ -11,9 +12,11 @@ from tqdm import tqdm
 from urllib.request import urlretrieve
 from torch.utils.data import DataLoader
 import torchvision.transforms.v2 as v2
+import torchvision.transforms.functional as TF
+
 
 class OxfordPetDataset(torch.utils.data.Dataset):
-    def __init__(self, root, mode="train", transform=None):
+    def __init__(self, root, mode="train", transform=False):
 
         assert mode in {"train", "valid", "test"}
 
@@ -31,7 +34,6 @@ class OxfordPetDataset(torch.utils.data.Dataset):
         return len(self.filenames)
 
     def __getitem__(self, idx):
-        
         filename = self.filenames[idx]
         image_path = os.path.join(self.images_directory, filename + ".jpg")
         mask_path = os.path.join(self.masks_directory, filename + ".png")
@@ -40,9 +42,34 @@ class OxfordPetDataset(torch.utils.data.Dataset):
         trimap = np.array(Image.open(mask_path))
         mask = self._preprocess_mask(trimap)
         
-        sample = dict(image=image, mask=mask, trimap=trimap)
         if self.transform is not None:
-            sample = self.transform(self.mode, **sample)
+            if self.mode == 'train':
+                # Random Horizontal Flip
+                if random.random() > 0.5:
+                    image = TF.hflip(image)
+                    mask = TF.hflip(mask)
+
+                # Random Vertical Flip
+                if random.random() > 0.5:
+                    image = TF.vflip(image)
+                    mask = TF.vflip(mask)
+                
+                transform = v2.Compose([                  
+                        v2.ToTensor(),
+                        v2.Resize((256, 256)),
+                        v2.ConvertImageDtype(torch.float32),
+                        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                    ])
+                
+            elif self.mode == 'valid' or self.mode == 'test':
+                transform = v2.Compose([                 
+                        v2.ToTensor(),
+                        v2.Resize((256, 256)),
+                        v2.ConvertImageDtype(torch.float32),
+                        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                    ])
+                
+        sample = dict(image=transform(image), mask=transform(mask))
         return sample
 
     @staticmethod
@@ -91,12 +118,10 @@ class SimpleOxfordPetDataset(OxfordPetDataset):
         # resize images
         image = np.array(Image.fromarray(sample["image"]).resize((256, 256), Image.BILINEAR), dtype=np.float32)
         mask = np.array(Image.fromarray(sample["mask"]).resize((256, 256), Image.NEAREST), dtype=np.float32)
-        trimap = np.array(Image.fromarray(sample["trimap"]).resize((256, 256), Image.NEAREST), dtype=np.float32)
 
         # convert to other format HWC -> CHW
         sample["image"] = np.moveaxis(image, -1, 0)
         sample["mask"] = np.expand_dims(mask, 0)
-        sample["trimap"] = np.expand_dims(trimap, 0)
 
         return sample
 
@@ -130,40 +155,14 @@ def extract_archive(filepath):
 
 def load_dataset(data_path, mode, data_augentation=False):
     if data_augentation:
-        def transform_process(mode, image, mask, trimap):
-            if mode == 'train':
-                transform = v2.Compose([
-                        v2.Resize(size=572),
-                        v2.RandomRotation(30),
-                        v2.RandomHorizontalFlip(0.5),
-                        v2.RandomVerticalFlip(0.5),
-                        v2.ColorJitter(0.5, 0.5, 0.5, 0.25),
-                        v2.ToTensor(),
-                        v2.ConvertImageDtype(torch.float32),
-                        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                    ])
-            elif mode == 'valid' or mode == 'test':
-                transform = v2.Compose([
-                        v2.Resize(size=572),
-                        v2.ToTensor(),
-                        v2.ConvertImageDtype(torch.float32),
-                        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                    ])
-            print(transform(image).shape)
-            sample = {
-                'image': transform(image),
-                'mask': transform(mask),
-                'trimap': transform(trimap)
-            }
-            print(sample["image"].shape, sample["mask"].shape, sample["trimap"].shape)
-        return OxfordPetDataset(data_path, mode, transform_process)
+        return OxfordPetDataset(data_path, mode)
     else:
         return SimpleOxfordPetDataset(data_path, mode)
 
 if __name__ == '__main__':
-    dataset = load_dataset('./dataset/oxford-iiit-pet', 'train')
+    dataset = load_dataset('./dataset/oxford-iiit-pet', 'test', data_augentation=True)
     dataloader = DataLoader(dataset, batch_size=8, num_workers=0, shuffle=False)
     
     for data in dataloader:
-        print(data['image'].shape, data['mask'].shape, data['trimap'].shape)
+        print(data['image'].shape, data['mask'].shape)
         break

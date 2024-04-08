@@ -76,7 +76,7 @@ def train(cfg, model, train_set, valid_set):
             # performance
             total_loss += loss
             total_acc += score
-            
+        
         training_loss = total_loss / math.ceil(len(train_dataset) / cfg.batch_size)
         training_acc = total_acc / math.ceil(len(train_dataset) / cfg.batch_size)
         
@@ -91,17 +91,17 @@ def train(cfg, model, train_set, valid_set):
         print('Epoch {}/{} > training loss: {:.4f}, training acc: {:.4f}, valid loss: {:.4f}, valid acc: {:.4f}, duration: {:.4f}'
                 .format(epoch, cfg.epochs, training_loss, training_acc, valid_loss, valid_acc, time.time() - epoch_start))
         
+        if valid_acc > best_val:
+            best_val = valid_acc
+            torch.save(model.state_dict(), f'./weight/best_{cfg.model}.pth')
+            print('> Save the best model weight in epoch {} - val_acc: {:.4f}'.format(epoch, best_val))
+        
         if epoch % cfg.save_weight == 0:
             weight_path = f'./saved_models/weight/{cfg.model}_{epoch}.pt'
             torch.save(model.state_dict(), weight_path)
             print(f'> Save the model weight at {weight_path}')
             
-            if valid_acc > best_val:
-                best_val = valid_acc
-                torch.save(model.state_dict(), f'./weight/best_{cfg.model}.pt')
-                print('> Save the best model weight in epoch {} - val_acc: {:.4f}'.format(epoch, best_val))
-            
-            plot_path = './log' + f'/{cfg.model}_epoch{epoch}_acc.png'
+            plot_path = f'/{cfg.model}_epoch{epoch}_acc.png'
             plt.title(f'{cfg.model} performance'), plt.ylabel('accuracy'), plt.xlabel('epoch')
             plt.plot(range(1, epoch + 1), train_epoch_acc, 'b', label='Training acc')
             plt.plot(range(1, epoch + 1), val_epoch_acc, 'r', label='Validation acc')
