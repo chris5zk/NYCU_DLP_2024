@@ -38,7 +38,7 @@ class Bottleneck(nn.Module):
 
 
 class resnet50(nn.Module):
-    def __init__(self, num_classes=1000, expansion = 4):
+    def __init__(self, num_classes=100, expansion = 4):
         super(resnet50, self).__init__()
         self.expansion = expansion
         

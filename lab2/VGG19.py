@@ -2,7 +2,7 @@ import torch.nn as nn
 
 
 class vgg19(nn.Module):
-    def __init__(self, num_classes=1000) -> None:
+    def __init__(self, num_classes=100) -> None:
         super(vgg19, self).__init__()
         
         # backbone
