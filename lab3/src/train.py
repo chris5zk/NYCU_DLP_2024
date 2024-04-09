@@ -95,9 +95,9 @@ def train(cfg, model, train_set, valid_set):
         if valid_acc > best_val:
             best_val = valid_acc
             if cfg.data_augmentation:
-                weight_path = f'./saved_models/weight/{cfg.model}_{epoch}_da.pth'
+                weight_path = f'./saved_models/weight/best_{cfg.model}_da.pth'
             else:
-                weight_path = f'./saved_models/weight/{cfg.model}_{epoch}.pth'
+                weight_path = f'./saved_models/weight/best_{cfg.model}.pth'
             torch.save(model.state_dict(), weight_path)
             
             print('> Save the best model weight in epoch {} - val_acc: {:.4f}'.format(epoch, best_val))
