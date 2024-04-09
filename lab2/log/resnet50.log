@@ -558,3 +558,120 @@
 2024-04-05 11:17:44,191 - INFO - > Found 500 images (test)...
 2024-04-05 11:17:45,649 - INFO - > Testing Loss - 0.005097
 2024-04-05 11:17:45,649 - INFO - > Testing Accuracy - 478/500 = 0.956000 = 95.6%
+2024-04-09 17:35:13,648 - INFO - > Mode - train
+2024-04-09 17:35:13,648 - INFO - > Config: model-resnet50, ckpt_use-False, ckpt_path-./checkpoint/resnet50_epoch100.ckpt, lr-0.001, batch_size-64, num_workers-8
+2024-04-09 17:35:13,930 - INFO - > Found 12594 images (train)...
+2024-04-09 17:35:13,931 - INFO - > Found 500 images (valid)...
+2024-04-09 17:35:13,932 - INFO - > No using checkpoint
+2024-04-09 17:36:26,967 - INFO - Epoch 1 > training loss: 0.0721, training acc: 0.0240, val loss: 0.0674, val acc: 0.0260, duration: 73.0353
+2024-04-09 17:37:39,934 - INFO - Epoch 2 > training loss: 0.0650, training acc: 0.0515, val loss: 0.0613, val acc: 0.0760, duration: 72.9662
+2024-04-09 17:38:52,977 - INFO - Epoch 3 > training loss: 0.0601, training acc: 0.0873, val loss: 0.0640, val acc: 0.1160, duration: 73.0430
+2024-04-09 17:40:06,100 - INFO - Epoch 4 > training loss: 0.0549, training acc: 0.1383, val loss: 0.0473, val acc: 0.2140, duration: 73.1224
+2024-04-09 17:41:19,085 - INFO - Epoch 5 > training loss: 0.0488, training acc: 0.2023, val loss: 0.0422, val acc: 0.2900, duration: 72.9856
+2024-04-09 17:42:32,137 - INFO - Epoch 6 > training loss: 0.0432, training acc: 0.2744, val loss: 0.0377, val acc: 0.3560, duration: 73.0509
+2024-04-09 17:43:45,285 - INFO - Epoch 7 > training loss: 0.0379, training acc: 0.3523, val loss: 0.0322, val acc: 0.4320, duration: 73.1480
+2024-04-09 17:44:58,235 - INFO - Epoch 8 > training loss: 0.0336, training acc: 0.4224, val loss: 0.0351, val acc: 0.4820, duration: 72.9498
+2024-04-09 17:46:11,565 - INFO - Epoch 9 > training loss: 0.0300, training acc: 0.4731, val loss: 0.0237, val acc: 0.5680, duration: 73.3295
+2024-04-09 17:47:24,626 - INFO - Epoch 10 > training loss: 0.0270, training acc: 0.5252, val loss: 0.0232, val acc: 0.6260, duration: 73.0612
+2024-04-09 17:48:37,779 - INFO - Epoch 11 > training loss: 0.0241, training acc: 0.5727, val loss: 0.0205, val acc: 0.6380, duration: 73.1531
+2024-04-09 17:49:50,807 - INFO - Epoch 12 > training loss: 0.0222, training acc: 0.6057, val loss: 0.0287, val acc: 0.5640, duration: 73.0275
+2024-04-09 17:51:03,949 - INFO - Epoch 13 > training loss: 0.0203, training acc: 0.6382, val loss: 0.0438, val acc: 0.5480, duration: 73.1417
+2024-04-09 17:52:17,145 - INFO - Epoch 14 > training loss: 0.0191, training acc: 0.6596, val loss: 0.0143, val acc: 0.7500, duration: 73.1958
+2024-04-09 17:53:30,406 - INFO - Epoch 15 > training loss: 0.0170, training acc: 0.6968, val loss: 0.0147, val acc: 0.7600, duration: 73.2602
+2024-04-09 17:54:43,454 - INFO - Epoch 16 > training loss: 0.0156, training acc: 0.7198, val loss: 0.0132, val acc: 0.8100, duration: 73.0477
+2024-04-09 17:55:56,603 - INFO - Epoch 17 > training loss: 0.0148, training acc: 0.7342, val loss: 0.0129, val acc: 0.7900, duration: 73.1493
+2024-04-09 17:57:09,817 - INFO - Epoch 18 > training loss: 0.0136, training acc: 0.7532, val loss: 0.0139, val acc: 0.7860, duration: 73.2133
+2024-04-09 17:58:22,980 - INFO - Epoch 19 > training loss: 0.0130, training acc: 0.7605, val loss: 0.0102, val acc: 0.8260, duration: 73.1632
+2024-04-09 17:59:36,180 - INFO - Epoch 20 > training loss: 0.0121, training acc: 0.7751, val loss: 0.0135, val acc: 0.7520, duration: 73.1993
+2024-04-09 17:59:36,554 - INFO - > Save the checkpoint in ./checkpoint/resnet50_epoch20.ckpt
+2024-04-09 18:00:49,772 - INFO - Epoch 21 > training loss: 0.0117, training acc: 0.7868, val loss: 0.0108, val acc: 0.8360, duration: 73.2173
+2024-04-09 18:02:03,023 - INFO - Epoch 22 > training loss: 0.0112, training acc: 0.7932, val loss: 0.0165, val acc: 0.7880, duration: 73.2512
+2024-04-09 18:03:16,234 - INFO - Epoch 23 > training loss: 0.0106, training acc: 0.8058, val loss: 0.0101, val acc: 0.8400, duration: 73.2105
+2024-04-09 18:04:29,367 - INFO - Epoch 24 > training loss: 0.0102, training acc: 0.8140, val loss: 0.0088, val acc: 0.8500, duration: 73.1332
+2024-04-09 18:05:42,680 - INFO - Epoch 25 > training loss: 0.0092, training acc: 0.8283, val loss: 0.0088, val acc: 0.8480, duration: 73.3123
+2024-04-09 18:06:55,770 - INFO - Epoch 26 > training loss: 0.0086, training acc: 0.8352, val loss: 0.0088, val acc: 0.8660, duration: 73.0896
+2024-04-09 18:08:09,001 - INFO - Epoch 27 > training loss: 0.0085, training acc: 0.8391, val loss: 0.0069, val acc: 0.8760, duration: 73.2311
+2024-04-09 18:09:22,235 - INFO - Epoch 28 > training loss: 0.0079, training acc: 0.8492, val loss: 0.0138, val acc: 0.8260, duration: 73.2333
+2024-04-09 18:10:35,573 - INFO - Epoch 29 > training loss: 0.0077, training acc: 0.8554, val loss: 0.0086, val acc: 0.8680, duration: 73.3381
+2024-04-09 18:11:48,949 - INFO - Epoch 30 > training loss: 0.0073, training acc: 0.8594, val loss: 0.0093, val acc: 0.8580, duration: 73.3760
+2024-04-09 18:13:02,499 - INFO - Epoch 31 > training loss: 0.0071, training acc: 0.8643, val loss: 0.0078, val acc: 0.8740, duration: 73.5494
+2024-04-09 18:14:15,846 - INFO - Epoch 32 > training loss: 0.0066, training acc: 0.8741, val loss: 0.0080, val acc: 0.8800, duration: 73.3468
+2024-04-09 18:15:29,123 - INFO - Epoch 33 > training loss: 0.0064, training acc: 0.8745, val loss: 0.0075, val acc: 0.8820, duration: 73.2761
+2024-04-09 18:16:42,355 - INFO - Epoch 34 > training loss: 0.0062, training acc: 0.8787, val loss: 0.0081, val acc: 0.8880, duration: 73.2327
+2024-04-09 18:17:55,754 - INFO - Epoch 35 > training loss: 0.0056, training acc: 0.8882, val loss: 0.0071, val acc: 0.8920, duration: 73.3980
+2024-04-09 18:19:08,984 - INFO - Epoch 36 > training loss: 0.0059, training acc: 0.8831, val loss: 0.0071, val acc: 0.8920, duration: 73.2298
+2024-04-09 18:20:22,208 - INFO - Epoch 37 > training loss: 0.0054, training acc: 0.8915, val loss: 0.0087, val acc: 0.8760, duration: 73.2235
+2024-04-09 18:21:35,575 - INFO - Epoch 38 > training loss: 0.0050, training acc: 0.9014, val loss: 0.0082, val acc: 0.8860, duration: 73.3675
+2024-04-09 18:22:48,947 - INFO - Epoch 39 > training loss: 0.0050, training acc: 0.8980, val loss: 0.0064, val acc: 0.8840, duration: 73.3712
+2024-04-09 18:24:02,292 - INFO - Epoch 40 > training loss: 0.0049, training acc: 0.9049, val loss: 0.0080, val acc: 0.8840, duration: 73.3444
+2024-04-09 18:24:02,593 - INFO - > Save the checkpoint in ./checkpoint/resnet50_epoch40.ckpt
+2024-04-09 18:25:15,917 - INFO - Epoch 41 > training loss: 0.0047, training acc: 0.9062, val loss: 0.0096, val acc: 0.9140, duration: 73.3245
+2024-04-09 18:26:29,196 - INFO - Epoch 42 > training loss: 0.0044, training acc: 0.9104, val loss: 0.0115, val acc: 0.8840, duration: 73.2779
+2024-04-09 18:27:42,376 - INFO - Epoch 43 > training loss: 0.0041, training acc: 0.9162, val loss: 0.0077, val acc: 0.8800, duration: 73.1799
+2024-04-09 18:28:55,791 - INFO - Epoch 44 > training loss: 0.0041, training acc: 0.9187, val loss: 0.0064, val acc: 0.9180, duration: 73.4145
+2024-04-09 18:30:09,011 - INFO - Epoch 45 > training loss: 0.0039, training acc: 0.9203, val loss: 0.0057, val acc: 0.9200, duration: 73.2202
+2024-04-09 18:31:22,437 - INFO - Epoch 46 > training loss: 0.0040, training acc: 0.9181, val loss: 0.0071, val acc: 0.8960, duration: 73.4259
+2024-04-09 18:32:35,777 - INFO - Epoch 47 > training loss: 0.0040, training acc: 0.9190, val loss: 0.0066, val acc: 0.8920, duration: 73.3398
+2024-04-09 18:33:49,287 - INFO - Epoch 48 > training loss: 0.0037, training acc: 0.9241, val loss: 0.0073, val acc: 0.8880, duration: 73.5093
+2024-04-09 18:35:02,606 - INFO - Epoch 49 > training loss: 0.0034, training acc: 0.9326, val loss: 0.0087, val acc: 0.8820, duration: 73.3188
+2024-04-09 18:36:15,922 - INFO - Epoch 50 > training loss: 0.0030, training acc: 0.9403, val loss: 0.0062, val acc: 0.9240, duration: 73.3160
+2024-04-09 18:36:16,029 - INFO - > Save the model weight at ./weight/resnet50_50.pt
+2024-04-09 18:36:16,194 - INFO - > Save the best model weight in epoch 50 - val_acc: 0.9240
+2024-04-09 18:36:16,273 - INFO - > Save the plot of the accuracy in ./log/resnet50_epoch50_acc.png
+2024-04-09 18:37:29,717 - INFO - Epoch 51 > training loss: 0.0033, training acc: 0.9335, val loss: 0.0063, val acc: 0.8960, duration: 73.4441
+2024-04-09 18:38:43,193 - INFO - Epoch 52 > training loss: 0.0030, training acc: 0.9407, val loss: 0.0098, val acc: 0.8960, duration: 73.4752
+2024-04-09 18:39:56,465 - INFO - Epoch 53 > training loss: 0.0030, training acc: 0.9367, val loss: 0.0074, val acc: 0.8980, duration: 73.2720
+2024-04-09 18:41:09,810 - INFO - Epoch 54 > training loss: 0.0029, training acc: 0.9412, val loss: 0.0083, val acc: 0.8900, duration: 73.3449
+2024-04-09 18:42:23,289 - INFO - Epoch 55 > training loss: 0.0028, training acc: 0.9400, val loss: 0.0056, val acc: 0.9260, duration: 73.4792
+2024-04-09 18:43:36,682 - INFO - Epoch 56 > training loss: 0.0026, training acc: 0.9458, val loss: 0.0078, val acc: 0.9060, duration: 73.3925
+2024-04-09 18:44:50,169 - INFO - Epoch 57 > training loss: 0.0025, training acc: 0.9459, val loss: 0.0070, val acc: 0.9060, duration: 73.4867
+2024-04-09 18:46:03,480 - INFO - Epoch 58 > training loss: 0.0023, training acc: 0.9510, val loss: 0.0075, val acc: 0.9220, duration: 73.3111
+2024-04-09 18:47:16,965 - INFO - Epoch 59 > training loss: 0.0025, training acc: 0.9481, val loss: 0.0062, val acc: 0.9180, duration: 73.4848
+2024-04-09 18:48:30,266 - INFO - Epoch 60 > training loss: 0.0025, training acc: 0.9473, val loss: 0.0059, val acc: 0.9280, duration: 73.3008
+2024-04-09 18:48:30,575 - INFO - > Save the checkpoint in ./checkpoint/resnet50_epoch60.ckpt
+2024-04-09 18:49:44,041 - INFO - Epoch 61 > training loss: 0.0026, training acc: 0.9471, val loss: 0.0079, val acc: 0.8940, duration: 73.4655
+2024-04-09 18:50:57,474 - INFO - Epoch 62 > training loss: 0.0022, training acc: 0.9520, val loss: 0.0060, val acc: 0.9220, duration: 73.4334
+2024-04-09 18:52:10,952 - INFO - Epoch 63 > training loss: 0.0021, training acc: 0.9586, val loss: 0.0055, val acc: 0.9140, duration: 73.4774
+2024-04-09 18:53:24,389 - INFO - Epoch 64 > training loss: 0.0019, training acc: 0.9588, val loss: 0.0055, val acc: 0.9240, duration: 73.4370
+2024-04-09 18:54:37,907 - INFO - Epoch 65 > training loss: 0.0021, training acc: 0.9547, val loss: 0.0074, val acc: 0.9100, duration: 73.5178
+2024-04-09 18:55:51,321 - INFO - Epoch 66 > training loss: 0.0019, training acc: 0.9601, val loss: 0.0067, val acc: 0.9100, duration: 73.4131
+2024-04-09 18:57:04,801 - INFO - Epoch 67 > training loss: 0.0020, training acc: 0.9580, val loss: 0.0067, val acc: 0.9060, duration: 73.4804
+2024-04-09 18:58:18,082 - INFO - Epoch 68 > training loss: 0.0019, training acc: 0.9598, val loss: 0.0062, val acc: 0.9060, duration: 73.2808
+2024-04-09 18:59:31,559 - INFO - Epoch 69 > training loss: 0.0019, training acc: 0.9604, val loss: 0.0064, val acc: 0.9280, duration: 73.4762
+2024-04-09 19:00:45,041 - INFO - Epoch 70 > training loss: 0.0015, training acc: 0.9690, val loss: 0.0065, val acc: 0.9200, duration: 73.4821
+2024-04-09 19:01:58,565 - INFO - Epoch 71 > training loss: 0.0017, training acc: 0.9643, val loss: 0.0070, val acc: 0.9280, duration: 73.5232
+2024-04-09 19:03:12,389 - INFO - Epoch 72 > training loss: 0.0018, training acc: 0.9636, val loss: 0.0063, val acc: 0.9200, duration: 73.8238
+2024-04-09 19:04:25,696 - INFO - Epoch 73 > training loss: 0.0014, training acc: 0.9701, val loss: 0.0055, val acc: 0.9280, duration: 73.3066
+2024-04-09 19:05:39,193 - INFO - Epoch 74 > training loss: 0.0016, training acc: 0.9668, val loss: 0.0056, val acc: 0.9320, duration: 73.4975
+2024-04-09 19:06:52,629 - INFO - Epoch 75 > training loss: 0.0017, training acc: 0.9635, val loss: 0.0059, val acc: 0.9260, duration: 73.4355
+2024-04-09 19:08:06,226 - INFO - Epoch 76 > training loss: 0.0015, training acc: 0.9699, val loss: 0.0062, val acc: 0.9320, duration: 73.5967
+2024-04-09 19:09:19,732 - INFO - Epoch 77 > training loss: 0.0017, training acc: 0.9645, val loss: 0.0079, val acc: 0.9140, duration: 73.5060
+2024-04-09 19:10:33,305 - INFO - Epoch 78 > training loss: 0.0018, training acc: 0.9622, val loss: 0.0078, val acc: 0.9220, duration: 73.5726
+2024-04-09 19:11:46,888 - INFO - Epoch 79 > training loss: 0.0022, training acc: 0.9562, val loss: 0.0078, val acc: 0.9100, duration: 73.5829
+2024-04-09 19:13:00,535 - INFO - Epoch 80 > training loss: 0.0017, training acc: 0.9641, val loss: 0.0069, val acc: 0.9280, duration: 73.6469
+2024-04-09 19:13:00,838 - INFO - > Save the checkpoint in ./checkpoint/resnet50_epoch80.ckpt
+2024-04-09 19:14:14,275 - INFO - Epoch 81 > training loss: 0.0013, training acc: 0.9723, val loss: 0.0066, val acc: 0.9280, duration: 73.4375
+2024-04-09 19:15:27,718 - INFO - Epoch 82 > training loss: 0.0015, training acc: 0.9679, val loss: 0.0073, val acc: 0.9140, duration: 73.4426
+2024-04-09 19:16:41,162 - INFO - Epoch 83 > training loss: 0.0012, training acc: 0.9759, val loss: 0.0075, val acc: 0.9120, duration: 73.4438
+2024-04-09 19:17:54,827 - INFO - Epoch 84 > training loss: 0.0013, training acc: 0.9730, val loss: 0.0071, val acc: 0.9140, duration: 73.6645
+2024-04-09 19:19:08,291 - INFO - Epoch 85 > training loss: 0.0014, training acc: 0.9716, val loss: 0.0060, val acc: 0.9200, duration: 73.4636
+2024-04-09 19:20:21,941 - INFO - Epoch 86 > training loss: 0.0012, training acc: 0.9745, val loss: 0.0067, val acc: 0.9280, duration: 73.6494
+2024-04-09 19:21:35,548 - INFO - Epoch 87 > training loss: 0.0014, training acc: 0.9719, val loss: 0.0093, val acc: 0.9020, duration: 73.6077
+2024-04-09 19:22:49,166 - INFO - Epoch 88 > training loss: 0.0012, training acc: 0.9766, val loss: 0.0058, val acc: 0.9320, duration: 73.6176
+2024-04-09 19:24:02,695 - INFO - Epoch 89 > training loss: 0.0012, training acc: 0.9750, val loss: 0.0066, val acc: 0.9280, duration: 73.5286
+2024-04-09 19:25:16,167 - INFO - Epoch 90 > training loss: 0.0010, training acc: 0.9789, val loss: 0.0057, val acc: 0.9380, duration: 73.4717
+2024-04-09 19:26:29,806 - INFO - Epoch 91 > training loss: 0.0012, training acc: 0.9751, val loss: 0.0066, val acc: 0.9180, duration: 73.6381
+2024-04-09 19:27:43,460 - INFO - Epoch 92 > training loss: 0.0010, training acc: 0.9794, val loss: 0.0055, val acc: 0.9380, duration: 73.6546
+2024-04-09 19:28:57,192 - INFO - Epoch 93 > training loss: 0.0010, training acc: 0.9796, val loss: 0.0066, val acc: 0.9380, duration: 73.7314
+2024-04-09 19:30:10,799 - INFO - Epoch 94 > training loss: 0.0011, training acc: 0.9760, val loss: 0.0079, val acc: 0.9360, duration: 73.6065
+2024-04-09 19:31:24,395 - INFO - Epoch 95 > training loss: 0.0011, training acc: 0.9778, val loss: 0.0060, val acc: 0.9340, duration: 73.5958
+2024-04-09 19:32:37,934 - INFO - Epoch 96 > training loss: 0.0011, training acc: 0.9779, val loss: 0.0066, val acc: 0.9180, duration: 73.5388
+2024-04-09 19:33:51,529 - INFO - Epoch 97 > training loss: 0.0010, training acc: 0.9795, val loss: 0.0068, val acc: 0.9300, duration: 73.5952
+2024-04-09 19:35:05,227 - INFO - Epoch 98 > training loss: 0.0010, training acc: 0.9791, val loss: 0.0061, val acc: 0.9220, duration: 73.6976
+2024-04-09 19:36:18,898 - INFO - Epoch 99 > training loss: 0.0010, training acc: 0.9794, val loss: 0.0060, val acc: 0.9280, duration: 73.6701
+2024-04-09 19:37:32,616 - INFO - Epoch 100 > training loss: 0.0009, training acc: 0.9809, val loss: 0.0064, val acc: 0.9400, duration: 73.7186
+2024-04-09 19:37:32,723 - INFO - > Save the model weight at ./weight/resnet50_100.pt
+2024-04-09 19:37:32,894 - INFO - > Save the best model weight in epoch 100 - val_acc: 0.9400
+2024-04-09 19:37:32,963 - INFO - > Save the plot of the accuracy in ./log/resnet50_epoch100_acc.png
+2024-04-09 19:37:33,263 - INFO - > Save the checkpoint in ./checkpoint/resnet50_epoch100.ckpt
+2024-04-09 19:37:33,263 - INFO - Total training time: 7339.3314
