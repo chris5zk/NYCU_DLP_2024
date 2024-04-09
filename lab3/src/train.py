@@ -56,7 +56,7 @@ def train(cfg, model, train_set, valid_set):
     
     # training loop
     train_start = time.time()
-    for epoch in range(epoch_init, cfg.epochs):
+    for epoch in range(epoch_init, cfg.epochs + 1):
         # train
         epoch_start = time.time()
         model.train()
