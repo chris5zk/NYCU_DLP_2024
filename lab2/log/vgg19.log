@@ -468,3 +468,139 @@
 2024-04-09 21:24:57,252 - INFO - > Save the plot of the accuracy in ./log/vgg19_epoch100_acc.png
 2024-04-09 21:24:59,159 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch100.ckpt
 2024-04-09 21:24:59,159 - INFO - Total training time: 13966.0683
+2024-04-09 21:40:49,635 - INFO - > Mode - train
+2024-04-09 21:40:49,635 - INFO - > Config: model-vgg19, ckpt_use-True, ckpt_path-./checkpoint/vgg19_epoch100.ckpt, lr-0.001, batch_size-64, num_workers-8
+2024-04-09 21:40:50,603 - INFO - > Found 12594 images (train)...
+2024-04-09 21:40:50,604 - INFO - > Found 500 images (valid)...
+2024-04-09 21:40:51,459 - INFO - > Using ./checkpoint/vgg19_epoch100.ckpt
+2024-04-09 21:40:51,459 - INFO - > Keep history -> start training from 101 epoch
+2024-04-09 21:41:48,769 - INFO - > Mode - test
+2024-04-09 21:41:48,770 - INFO - > Config: model-resnet50, weight-./weight/resnet50_500.pt
+2024-04-09 21:42:00,631 - INFO - > Mode - test
+2024-04-09 21:42:00,631 - INFO - > Config: model-resnet50, weight-./weight/resnet50_500.pt
+2024-04-09 21:42:00,922 - INFO - > Found 500 images (test)...
+2024-04-09 21:42:24,799 - INFO - > Mode - test
+2024-04-09 21:42:24,800 - INFO - > Config: model-resnet50, weight-./weight/resnet50.pt
+2024-04-09 21:42:25,090 - INFO - > Found 500 images (test)...
+2024-04-09 21:42:48,048 - INFO - > Mode - test
+2024-04-09 21:42:48,048 - INFO - > Config: model-resnet50, weight-./weight/resnet50_100.pt
+2024-04-09 21:42:48,343 - INFO - > Found 500 images (test)...
+2024-04-09 21:42:49,763 - INFO - > Testing Loss - 0.004316
+2024-04-09 21:42:49,763 - INFO - > Testing Accuracy - 476/500 = 0.952000 = 95.19999999999999%
+2024-04-09 21:43:10,165 - INFO - Epoch 101 > training loss: 0.0125, training acc: 0.7696, val loss: 0.0146, val acc: 0.7520, duration: 138.7062
+2024-04-09 21:43:17,236 - INFO - > Mode - test
+2024-04-09 21:43:17,237 - INFO - > Config: model-resnet50, weight-./weight/best_resnet50.pt
+2024-04-09 21:43:17,526 - INFO - > Found 500 images (test)...
+2024-04-09 21:43:18,946 - INFO - > Testing Loss - 0.004300
+2024-04-09 21:43:18,946 - INFO - > Testing Accuracy - 476/500 = 0.952000 = 95.19999999999999%
+2024-04-09 21:45:28,738 - INFO - Epoch 102 > training loss: 0.0122, training acc: 0.7743, val loss: 0.0146, val acc: 0.7540, duration: 138.5720
+2024-04-09 21:47:47,423 - INFO - Epoch 103 > training loss: 0.0124, training acc: 0.7740, val loss: 0.0141, val acc: 0.7560, duration: 138.6852
+2024-04-09 21:50:06,064 - INFO - Epoch 104 > training loss: 0.0117, training acc: 0.7834, val loss: 0.0129, val acc: 0.7780, duration: 138.6404
+2024-04-09 21:52:24,597 - INFO - Epoch 105 > training loss: 0.0113, training acc: 0.7921, val loss: 0.0119, val acc: 0.7980, duration: 138.5331
+2024-04-09 21:54:43,290 - INFO - Epoch 106 > training loss: 0.0113, training acc: 0.7909, val loss: 0.0135, val acc: 0.7620, duration: 138.6929
+2024-04-09 21:57:01,950 - INFO - Epoch 107 > training loss: 0.0110, training acc: 0.7953, val loss: 0.0105, val acc: 0.8220, duration: 138.6590
+2024-04-09 21:59:20,693 - INFO - Epoch 108 > training loss: 0.0106, training acc: 0.8003, val loss: 0.0125, val acc: 0.7780, duration: 138.7435
+2024-04-09 22:01:39,414 - INFO - Epoch 109 > training loss: 0.0109, training acc: 0.8000, val loss: 0.0139, val acc: 0.7780, duration: 138.7203
+2024-04-09 22:03:58,057 - INFO - Epoch 110 > training loss: 0.0104, training acc: 0.8071, val loss: 0.0111, val acc: 0.8220, duration: 138.6428
+2024-04-09 22:06:16,568 - INFO - Epoch 111 > training loss: 0.0098, training acc: 0.8166, val loss: 0.0130, val acc: 0.8020, duration: 138.5107
+2024-04-09 22:08:35,216 - INFO - Epoch 112 > training loss: 0.0100, training acc: 0.8132, val loss: 0.0103, val acc: 0.8280, duration: 138.6473
+2024-04-09 22:10:53,890 - INFO - Epoch 113 > training loss: 0.0096, training acc: 0.8198, val loss: 0.0129, val acc: 0.8060, duration: 138.6742
+2024-04-09 22:13:12,630 - INFO - Epoch 114 > training loss: 0.0094, training acc: 0.8235, val loss: 0.0122, val acc: 0.7880, duration: 138.7392
+2024-04-09 22:15:31,187 - INFO - Epoch 115 > training loss: 0.0094, training acc: 0.8231, val loss: 0.0119, val acc: 0.7960, duration: 138.5566
+2024-04-09 22:17:49,868 - INFO - Epoch 116 > training loss: 0.0089, training acc: 0.8339, val loss: 0.0097, val acc: 0.8440, duration: 138.6815
+2024-04-09 22:20:08,567 - INFO - Epoch 117 > training loss: 0.0093, training acc: 0.8263, val loss: 0.0098, val acc: 0.8280, duration: 138.6985
+2024-04-09 22:22:27,250 - INFO - Epoch 118 > training loss: 0.0087, training acc: 0.8378, val loss: 0.0101, val acc: 0.8340, duration: 138.6821
+2024-04-09 22:24:45,815 - INFO - Epoch 119 > training loss: 0.0084, training acc: 0.8404, val loss: 0.0134, val acc: 0.8020, duration: 138.5657
+2024-04-09 22:27:04,704 - INFO - Epoch 120 > training loss: 0.0084, training acc: 0.8433, val loss: 0.0107, val acc: 0.8160, duration: 138.8881
+2024-04-09 22:27:06,583 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch120.ckpt
+2024-04-09 22:29:25,234 - INFO - Epoch 121 > training loss: 0.0083, training acc: 0.8483, val loss: 0.0101, val acc: 0.8460, duration: 138.6506
+2024-04-09 22:31:43,942 - INFO - Epoch 122 > training loss: 0.0080, training acc: 0.8464, val loss: 0.0112, val acc: 0.8340, duration: 138.7082
+2024-04-09 22:34:02,813 - INFO - Epoch 123 > training loss: 0.0079, training acc: 0.8521, val loss: 0.0099, val acc: 0.8460, duration: 138.8701
+2024-04-09 22:36:21,598 - INFO - Epoch 124 > training loss: 0.0074, training acc: 0.8600, val loss: 0.0106, val acc: 0.8460, duration: 138.7855
+2024-04-09 22:38:40,253 - INFO - Epoch 125 > training loss: 0.0077, training acc: 0.8562, val loss: 0.0114, val acc: 0.8480, duration: 138.6546
+2024-04-09 22:40:59,086 - INFO - Epoch 126 > training loss: 0.0072, training acc: 0.8656, val loss: 0.0096, val acc: 0.8500, duration: 138.8322
+2024-04-09 22:43:17,787 - INFO - Epoch 127 > training loss: 0.0073, training acc: 0.8626, val loss: 0.0098, val acc: 0.8420, duration: 138.7010
+2024-04-09 22:45:36,427 - INFO - Epoch 128 > training loss: 0.0070, training acc: 0.8647, val loss: 0.0103, val acc: 0.8500, duration: 138.6397
+2024-04-09 22:47:55,138 - INFO - Epoch 129 > training loss: 0.0070, training acc: 0.8685, val loss: 0.0109, val acc: 0.8300, duration: 138.7109
+2024-04-09 22:50:13,926 - INFO - Epoch 130 > training loss: 0.0068, training acc: 0.8726, val loss: 0.0111, val acc: 0.8440, duration: 138.7873
+2024-04-09 22:52:32,592 - INFO - Epoch 131 > training loss: 0.0068, training acc: 0.8714, val loss: 0.0082, val acc: 0.8660, duration: 138.6659
+2024-04-09 22:54:51,303 - INFO - Epoch 132 > training loss: 0.0065, training acc: 0.8791, val loss: 0.0102, val acc: 0.8380, duration: 138.7110
+2024-04-09 22:57:09,930 - INFO - Epoch 133 > training loss: 0.0064, training acc: 0.8796, val loss: 0.0088, val acc: 0.8700, duration: 138.6264
+2024-04-09 22:59:28,619 - INFO - Epoch 134 > training loss: 0.0061, training acc: 0.8845, val loss: 0.0108, val acc: 0.8500, duration: 138.6893
+2024-04-09 23:01:47,299 - INFO - Epoch 135 > training loss: 0.0062, training acc: 0.8822, val loss: 0.0096, val acc: 0.8640, duration: 138.6792
+2024-04-09 23:04:05,958 - INFO - Epoch 136 > training loss: 0.0059, training acc: 0.8868, val loss: 0.0093, val acc: 0.8660, duration: 138.6594
+2024-04-09 23:06:24,642 - INFO - Epoch 137 > training loss: 0.0059, training acc: 0.8871, val loss: 0.0087, val acc: 0.8560, duration: 138.6837
+2024-04-09 23:08:43,331 - INFO - Epoch 138 > training loss: 0.0058, training acc: 0.8912, val loss: 0.0088, val acc: 0.8760, duration: 138.6884
+2024-04-09 23:11:02,133 - INFO - Epoch 139 > training loss: 0.0056, training acc: 0.8919, val loss: 0.0102, val acc: 0.8480, duration: 138.8015
+2024-04-09 23:13:21,025 - INFO - Epoch 140 > training loss: 0.0055, training acc: 0.8962, val loss: 0.0102, val acc: 0.8440, duration: 138.8921
+2024-04-09 23:13:22,929 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch140.ckpt
+2024-04-09 23:15:41,640 - INFO - Epoch 141 > training loss: 0.0054, training acc: 0.8948, val loss: 0.0111, val acc: 0.8560, duration: 138.7115
+2024-04-09 23:18:00,367 - INFO - Epoch 142 > training loss: 0.0050, training acc: 0.9023, val loss: 0.0083, val acc: 0.8720, duration: 138.7261
+2024-04-09 23:20:19,303 - INFO - Epoch 143 > training loss: 0.0051, training acc: 0.9000, val loss: 0.0088, val acc: 0.8900, duration: 138.9363
+2024-04-09 23:22:37,827 - INFO - Epoch 144 > training loss: 0.0050, training acc: 0.9019, val loss: 0.0118, val acc: 0.8560, duration: 138.5238
+2024-04-09 23:24:56,688 - INFO - Epoch 145 > training loss: 0.0051, training acc: 0.9015, val loss: 0.0107, val acc: 0.8680, duration: 138.8606
+2024-04-09 23:27:15,434 - INFO - Epoch 146 > training loss: 0.0050, training acc: 0.9015, val loss: 0.0117, val acc: 0.8440, duration: 138.7458
+2024-04-09 23:29:34,298 - INFO - Epoch 147 > training loss: 0.0051, training acc: 0.9022, val loss: 0.0106, val acc: 0.8540, duration: 138.8640
+2024-04-09 23:31:53,083 - INFO - Epoch 148 > training loss: 0.0048, training acc: 0.9064, val loss: 0.0096, val acc: 0.8580, duration: 138.7842
+2024-04-09 23:34:11,836 - INFO - Epoch 149 > training loss: 0.0045, training acc: 0.9135, val loss: 0.0095, val acc: 0.8620, duration: 138.7528
+2024-04-09 23:36:30,551 - INFO - Epoch 150 > training loss: 0.0043, training acc: 0.9135, val loss: 0.0105, val acc: 0.8700, duration: 138.7144
+2024-04-09 23:36:31,180 - INFO - > Save the model weight at ./weight/vgg19_150.pt
+2024-04-09 23:36:32,225 - INFO - > Save the best model weight in epoch 150 - val_acc: 0.8700
+2024-04-09 23:36:32,339 - INFO - > Save the plot of the accuracy in ./log/vgg19_epoch150_acc.png
+2024-04-09 23:38:51,179 - INFO - Epoch 151 > training loss: 0.0042, training acc: 0.9154, val loss: 0.0123, val acc: 0.8480, duration: 138.8396
+2024-04-09 23:41:09,981 - INFO - Epoch 152 > training loss: 0.0043, training acc: 0.9156, val loss: 0.0099, val acc: 0.8800, duration: 138.8022
+2024-04-09 23:43:28,736 - INFO - Epoch 153 > training loss: 0.0042, training acc: 0.9149, val loss: 0.0103, val acc: 0.8660, duration: 138.7542
+2024-04-09 23:45:47,565 - INFO - Epoch 154 > training loss: 0.0041, training acc: 0.9173, val loss: 0.0123, val acc: 0.8440, duration: 138.8295
+2024-04-09 23:48:06,380 - INFO - Epoch 155 > training loss: 0.0041, training acc: 0.9177, val loss: 0.0085, val acc: 0.8780, duration: 138.8142
+2024-04-09 23:50:25,042 - INFO - Epoch 156 > training loss: 0.0040, training acc: 0.9219, val loss: 0.0106, val acc: 0.8580, duration: 138.6624
+2024-04-09 23:52:43,682 - INFO - Epoch 157 > training loss: 0.0039, training acc: 0.9245, val loss: 0.0083, val acc: 0.8800, duration: 138.6386
+2024-04-09 23:55:02,435 - INFO - Epoch 158 > training loss: 0.0039, training acc: 0.9269, val loss: 0.0092, val acc: 0.8860, duration: 138.7528
+2024-04-09 23:57:21,266 - INFO - Epoch 159 > training loss: 0.0039, training acc: 0.9249, val loss: 0.0098, val acc: 0.8820, duration: 138.8304
+2024-04-09 23:59:40,016 - INFO - Epoch 160 > training loss: 0.0035, training acc: 0.9294, val loss: 0.0109, val acc: 0.8860, duration: 138.7506
+2024-04-09 23:59:41,917 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch160.ckpt
+2024-04-10 00:02:00,706 - INFO - Epoch 161 > training loss: 0.0037, training acc: 0.9299, val loss: 0.0117, val acc: 0.8620, duration: 138.7886
+2024-04-10 00:04:19,354 - INFO - Epoch 162 > training loss: 0.0036, training acc: 0.9312, val loss: 0.0098, val acc: 0.8700, duration: 138.6481
+2024-04-10 00:06:38,099 - INFO - Epoch 163 > training loss: 0.0034, training acc: 0.9320, val loss: 0.0081, val acc: 0.8860, duration: 138.7447
+2024-04-10 00:08:56,915 - INFO - Epoch 164 > training loss: 0.0035, training acc: 0.9312, val loss: 0.0111, val acc: 0.8820, duration: 138.8153
+2024-04-10 00:11:15,839 - INFO - Epoch 165 > training loss: 0.0034, training acc: 0.9308, val loss: 0.0109, val acc: 0.8740, duration: 138.9240
+2024-04-10 00:13:34,597 - INFO - Epoch 166 > training loss: 0.0038, training acc: 0.9273, val loss: 0.0126, val acc: 0.8700, duration: 138.7583
+2024-04-10 00:15:53,384 - INFO - Epoch 167 > training loss: 0.0036, training acc: 0.9307, val loss: 0.0092, val acc: 0.8920, duration: 138.7868
+2024-04-10 00:18:12,320 - INFO - Epoch 168 > training loss: 0.0032, training acc: 0.9364, val loss: 0.0089, val acc: 0.8920, duration: 138.9357
+2024-04-10 00:20:31,105 - INFO - Epoch 169 > training loss: 0.0032, training acc: 0.9350, val loss: 0.0109, val acc: 0.8600, duration: 138.7844
+2024-04-10 00:22:49,869 - INFO - Epoch 170 > training loss: 0.0033, training acc: 0.9351, val loss: 0.0110, val acc: 0.8640, duration: 138.7634
+2024-04-10 00:25:08,634 - INFO - Epoch 171 > training loss: 0.0032, training acc: 0.9367, val loss: 0.0099, val acc: 0.8820, duration: 138.7643
+2024-04-10 00:27:27,361 - INFO - Epoch 172 > training loss: 0.0030, training acc: 0.9409, val loss: 0.0103, val acc: 0.8880, duration: 138.7274
+2024-04-10 00:29:46,346 - INFO - Epoch 173 > training loss: 0.0031, training acc: 0.9357, val loss: 0.0097, val acc: 0.8740, duration: 138.9848
+2024-04-10 00:32:05,045 - INFO - Epoch 174 > training loss: 0.0030, training acc: 0.9408, val loss: 0.0080, val acc: 0.8820, duration: 138.6981
+2024-04-10 00:34:23,810 - INFO - Epoch 175 > training loss: 0.0030, training acc: 0.9376, val loss: 0.0093, val acc: 0.8820, duration: 138.7655
+2024-04-10 00:36:42,370 - INFO - Epoch 176 > training loss: 0.0028, training acc: 0.9438, val loss: 0.0093, val acc: 0.8780, duration: 138.5594
+2024-04-10 00:39:01,239 - INFO - Epoch 177 > training loss: 0.0028, training acc: 0.9424, val loss: 0.0090, val acc: 0.8840, duration: 138.8692
+2024-04-10 00:41:19,969 - INFO - Epoch 178 > training loss: 0.0030, training acc: 0.9405, val loss: 0.0101, val acc: 0.8820, duration: 138.7296
+2024-04-10 00:43:38,901 - INFO - Epoch 179 > training loss: 0.0024, training acc: 0.9505, val loss: 0.0088, val acc: 0.8940, duration: 138.9315
+2024-04-10 00:45:57,631 - INFO - Epoch 180 > training loss: 0.0027, training acc: 0.9451, val loss: 0.0096, val acc: 0.8840, duration: 138.7296
+2024-04-10 00:45:59,520 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch180.ckpt
+2024-04-10 00:48:18,222 - INFO - Epoch 181 > training loss: 0.0028, training acc: 0.9455, val loss: 0.0102, val acc: 0.8900, duration: 138.7017
+2024-04-10 00:50:36,933 - INFO - Epoch 182 > training loss: 0.0024, training acc: 0.9511, val loss: 0.0077, val acc: 0.9040, duration: 138.7110
+2024-04-10 00:52:55,769 - INFO - Epoch 183 > training loss: 0.0026, training acc: 0.9479, val loss: 0.0090, val acc: 0.8920, duration: 138.8359
+2024-04-10 00:55:14,713 - INFO - Epoch 184 > training loss: 0.0022, training acc: 0.9532, val loss: 0.0094, val acc: 0.8840, duration: 138.9436
+2024-04-10 00:57:33,481 - INFO - Epoch 185 > training loss: 0.0023, training acc: 0.9536, val loss: 0.0099, val acc: 0.8880, duration: 138.7674
+2024-04-10 00:59:52,394 - INFO - Epoch 186 > training loss: 0.0027, training acc: 0.9466, val loss: 0.0111, val acc: 0.8740, duration: 138.9124
+2024-04-10 01:02:11,293 - INFO - Epoch 187 > training loss: 0.0027, training acc: 0.9456, val loss: 0.0105, val acc: 0.8740, duration: 138.8988
+2024-04-10 01:04:30,115 - INFO - Epoch 188 > training loss: 0.0023, training acc: 0.9547, val loss: 0.0101, val acc: 0.8780, duration: 138.8219
+2024-04-10 01:06:48,679 - INFO - Epoch 189 > training loss: 0.0025, training acc: 0.9510, val loss: 0.0108, val acc: 0.8840, duration: 138.5634
+2024-04-10 01:09:07,448 - INFO - Epoch 190 > training loss: 0.0024, training acc: 0.9524, val loss: 0.0086, val acc: 0.9040, duration: 138.7693
+2024-04-10 01:11:26,263 - INFO - Epoch 191 > training loss: 0.0023, training acc: 0.9528, val loss: 0.0099, val acc: 0.8900, duration: 138.8145
+2024-04-10 01:13:45,109 - INFO - Epoch 192 > training loss: 0.0025, training acc: 0.9528, val loss: 0.0106, val acc: 0.8840, duration: 138.8454
+2024-04-10 01:16:03,943 - INFO - Epoch 193 > training loss: 0.0020, training acc: 0.9582, val loss: 0.0114, val acc: 0.8780, duration: 138.8341
+2024-04-10 01:18:22,875 - INFO - Epoch 194 > training loss: 0.0026, training acc: 0.9474, val loss: 0.0107, val acc: 0.8880, duration: 138.9312
+2024-04-10 01:20:41,704 - INFO - Epoch 195 > training loss: 0.0023, training acc: 0.9549, val loss: 0.0087, val acc: 0.8800, duration: 138.8292
+2024-04-10 01:23:00,626 - INFO - Epoch 196 > training loss: 0.0021, training acc: 0.9556, val loss: 0.0076, val acc: 0.9040, duration: 138.9218
+2024-04-10 01:25:19,552 - INFO - Epoch 197 > training loss: 0.0022, training acc: 0.9573, val loss: 0.0089, val acc: 0.9160, duration: 138.9256
+2024-04-10 01:27:38,281 - INFO - Epoch 198 > training loss: 0.0025, training acc: 0.9517, val loss: 0.0085, val acc: 0.8980, duration: 138.7283
+2024-04-10 01:29:57,202 - INFO - Epoch 199 > training loss: 0.0021, training acc: 0.9599, val loss: 0.0092, val acc: 0.8960, duration: 138.9215
+2024-04-10 01:32:15,928 - INFO - Epoch 200 > training loss: 0.0020, training acc: 0.9596, val loss: 0.0101, val acc: 0.8840, duration: 138.7251
+2024-04-10 01:32:16,557 - INFO - > Save the model weight at ./weight/vgg19_200.pt
+2024-04-10 01:32:17,596 - INFO - > Save the best model weight in epoch 200 - val_acc: 0.8840
+2024-04-10 01:32:17,687 - INFO - > Save the plot of the accuracy in ./log/vgg19_epoch200_acc.png
+2024-04-10 01:32:19,562 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch200.ckpt
+2024-04-10 01:32:19,562 - INFO - Total training time: 13888.1034

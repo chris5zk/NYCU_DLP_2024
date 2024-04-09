@@ -5,10 +5,10 @@ os.makedirs('./log', exist_ok=True)
 
 def get_logger():
 
-    logger = logging.getLogger('resnet50')
+    logger = logging.getLogger('vgg19')
     logger.setLevel(logging.DEBUG)
 
-    file_handler = logging.FileHandler('./log/resnet50.log')
+    file_handler = logging.FileHandler('./log/vgg19.log')
     file_handler.setLevel(logging.DEBUG)
 
     console_handler = logging.StreamHandler()
