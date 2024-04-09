@@ -94,15 +94,25 @@ def train(cfg, model, train_set, valid_set):
         
         if valid_acc > best_val:
             best_val = valid_acc
-            torch.save(model.state_dict(), f'./saved_models/weight/best_{cfg.model}.pth')
+            if cfg.data_augmentation:
+                weight_path = f'./saved_models/weight/{cfg.model}_{epoch}_da.pth'
+            else:
+                weight_path = f'./saved_models/weight/{cfg.model}_{epoch}.pth'
+            torch.save(model.state_dict(), weight_path)
+            
             print('> Save the best model weight in epoch {} - val_acc: {:.4f}'.format(epoch, best_val))
         
         if epoch % cfg.save_weight == 0:
-            weight_path = f'./saved_models/weight/{cfg.model}_{epoch}.pt'
+            if cfg.data_augmentation:
+                weight_path = f'./saved_models/weight/{cfg.model}_{epoch}_da.pth'
+                plot_path = f'./{cfg.model}_epoch{epoch}_acc_da.png'
+            else:
+                weight_path = f'./saved_models/weight/{cfg.model}_{epoch}.pth'
+                plot_path = f'./{cfg.model}_epoch{epoch}_acc.png'
+            
             torch.save(model.state_dict(), weight_path)
             print(f'> Save the model weight at {weight_path}')
             
-            plot_path = f'./{cfg.model}_epoch{epoch}_acc.png'
             plt.title(f'{cfg.model} performance'), plt.ylabel('accuracy'), plt.xlabel('epoch')
             plt.plot(range(1, epoch + 1), train_epoch_acc, 'b', label='Training acc')
             plt.plot(range(1, epoch + 1), val_epoch_acc, 'r', label='Validation acc')
@@ -112,7 +122,10 @@ def train(cfg, model, train_set, valid_set):
             print(f'> Save the plot of the accuracy in {plot_path}')          
         
         if epoch % cfg.save_ckpt == 0:
-            path = f'./saved_models/checkpoint/{cfg.model}_epoch{epoch}.ckpt'
+            if cfg.data_augmentation:
+                path = f'./saved_models/checkpoint/{cfg.model}_epoch{epoch}_da.ckpt'
+            else:
+                path = f'./saved_models/checkpoint/{cfg.model}_epoch{epoch}.ckpt'
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),

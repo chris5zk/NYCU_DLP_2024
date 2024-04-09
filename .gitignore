@@ -3,6 +3,8 @@
 **/checkpoint/
 **/weight/
 **/saved_model/
+**/input/
+**/output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
