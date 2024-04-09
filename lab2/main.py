@@ -37,7 +37,7 @@ def test(model, datahandler, cfg):
     test_dataloader = datahandler.get_dataloader(test_dataset, cfg.batch_size, cfg.num_workers)
     
     # model
-    model.load_state_dict(torch.load(cfg.weight))
+    model.load_state_dict(torch.load(cfg.weight, map_location='cpu'))
     model.eval()
     
     # criterion

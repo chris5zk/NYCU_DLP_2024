@@ -604,3 +604,11 @@
 2024-04-10 01:32:17,687 - INFO - > Save the plot of the accuracy in ./log/vgg19_epoch200_acc.png
 2024-04-10 01:32:19,562 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch200.ckpt
 2024-04-10 01:32:19,562 - INFO - Total training time: 13888.1034
+2024-04-10 01:49:38,768 - INFO - > Mode - test
+2024-04-10 01:49:38,770 - INFO - > Config: model-vgg19, weight-./weight/best_19.pt
+2024-04-10 01:49:41,785 - INFO - > Found 500 images (test)...
+2024-04-10 01:49:51,892 - INFO - > Mode - test
+2024-04-10 01:49:51,893 - INFO - > Config: model-vgg19, weight-./weight/best_vgg19.pt
+2024-04-10 01:49:54,396 - INFO - > Found 500 images (test)...
+2024-04-10 01:50:20,857 - INFO - > Testing Loss - 0.008051
+2024-04-10 01:50:20,863 - INFO - > Testing Accuracy - 456/500 = 0.912000 = 91.2%
