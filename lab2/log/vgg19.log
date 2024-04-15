@@ -604,3 +604,28 @@
 2024-04-10 01:32:17,687 - INFO - > Save the plot of the accuracy in ./log/vgg19_epoch200_acc.png
 2024-04-10 01:32:19,562 - INFO - > Save the checkpoint in ./checkpoint/vgg19_epoch200.ckpt
 2024-04-10 01:32:19,562 - INFO - Total training time: 13888.1034
+2024-04-11 12:55:46,585 - INFO - > Mode - test
+2024-04-11 12:55:46,585 - INFO - > Config: model-vgg19, weight-./weight/best_vgg19.pt
+2024-04-11 12:55:47,558 - INFO - > Found 500 images (test)...
+2024-04-11 12:55:50,274 - INFO - > Testing Loss - 0.008071
+2024-04-11 12:55:50,274 - INFO - > Testing Accuracy - 456/500 = 0.912000 = 91.2%
+2024-04-11 12:55:55,929 - INFO - > Mode - test
+2024-04-11 12:55:55,929 - INFO - > Config: model-vgg19, weight-./weight/best_vgg19.pt
+2024-04-11 12:55:56,899 - INFO - > Found 500 images (test)...
+2024-04-11 12:55:59,357 - INFO - > Testing Loss - 0.007981
+2024-04-11 12:55:59,357 - INFO - > Testing Accuracy - 456/500 = 0.912000 = 91.2%
+2024-04-11 12:56:17,891 - INFO - > Mode - test
+2024-04-11 12:56:17,892 - INFO - > Config: model-resnet50, weight-./weight/best_resnet50.pt
+2024-04-11 12:56:18,190 - INFO - > Found 500 images (test)...
+2024-04-11 12:56:19,724 - INFO - > Testing Loss - 0.004478
+2024-04-11 12:56:19,725 - INFO - > Testing Accuracy - 476/500 = 0.952000 = 95.19999999999999%
+2024-04-11 13:19:25,713 - INFO - > Mode - test
+2024-04-11 13:19:25,713 - INFO - > Config: model-vgg19, weight-./weight/best_vgg19.pt
+2024-04-11 13:19:26,684 - INFO - > Found 500 images (test)...
+2024-04-11 13:19:29,157 - INFO - > Testing Loss - 0.008085
+2024-04-11 13:19:29,157 - INFO - > Testing Accuracy - 456/500 = 0.912000 = 91.2%
+2024-04-11 13:19:36,395 - INFO - > Mode - test
+2024-04-11 13:19:36,395 - INFO - > Config: model-resnet50, weight-./weight/best_resnet50.pt
+2024-04-11 13:19:36,680 - INFO - > Found 500 images (test)...
+2024-04-11 13:19:38,229 - INFO - > Testing Loss - 0.004428
+2024-04-11 13:19:38,229 - INFO - > Testing Accuracy - 476/500 = 0.952000 = 95.19999999999999%
