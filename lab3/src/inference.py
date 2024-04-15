@@ -14,8 +14,8 @@ from models.resnet34_unet import resnet34_unet
 
 def get_args():
     parser = argparse.ArgumentParser(description='Predict masks from input images')
-    
-    parser.add_argument('--model', default='./saved_models/weight/best_unet.pth', help='path to the stored model weight')
+    parser.add_argument('--model', default='unet', choices=['unet', 'resnet34_unet'], help='select the model')
+    parser.add_argument('--model_path', default='./saved_models/weight/best_unet.pth', help='path to the stored model weight')
     
     parser.add_argument('--data_path', default='./dataset/oxford-iiit-pet', type=str, help='path to the input data')
     parser.add_argument('--data_augmentation', '-da', action='store_true', help='use data augmentation or not')
@@ -51,8 +51,8 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_dataset, args.batch_size, num_workers=0, shuffle=False)
 
     # read model
-    model = UNet()
-    model.load_state_dict(torch.load(args.model))
+    model = UNet() if args.model == 'unet' else resnet34_unet()
+    model.load_state_dict(torch.load(args.model_path, map_location='cpu'))
     
     model = model.to(args.device)
     model.eval()
@@ -61,7 +61,10 @@ if __name__ == '__main__':
     criterion = DICEloss()
     
     # testing loop
-    output_path = './output/'
+    if args.data_augmentation:
+        output_path = f'./output/{args.model}_da/'
+    else:
+        output_path = f'./output/{args.model}/'
     os.makedirs(output_path, exist_ok=True)
     
     idx = 1
@@ -79,7 +82,7 @@ if __name__ == '__main__':
             total_loss += loss
             total_acc += score
             
-            if args.save_pred:
+            if args.save_pred and idx <= 10:
                 path = output_path + f'image_{idx}'
                 save_pred(y_pred, y, path)
                 idx += 1

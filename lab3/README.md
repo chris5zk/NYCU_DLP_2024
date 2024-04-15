@@ -18,7 +18,15 @@ $$ Dice\ score=\frac{2\times Intersection}{Pred\ mask + GT\ mask} $$
 
 ## Implemtation Details
 
-A. Details of your training, evaluating, inferencing code
+### Details of training code
+
+一開始在訓練時一直有 DICE score 升不上去的情況，後來是發現在計算整個 epoch 的分數時，應該要除以的不是資料集長度，而是 batch 的個數，這點是與前面幾次作業較不同的地方，其餘的訓練細節為：
+
+- 使用 `Adam` 做為 optimizer，learning rate 預設為 `lr=1e-5`
+- 我的配置為：`batch_size=16`, `num_workers=8`, `epochs=100`
+- 每一個 epoch 都會進行驗證得到 `val_loss`, `val_acc`
+- Loss Function 只有單純使用 DICE Loss，且 Accuracy 與 Loss 的和為 1
+- 得到更好的驗證分數就會儲存模型，也能透過設置 interval 來儲存 checkpoint 與 weight
 
 ### Details of UNet & ResNet34_UNet
 
@@ -32,9 +40,9 @@ A. Details of your training, evaluating, inferencing code
 
 |![alt text](./att/resnet34_unet_code.png)|
 |------------------|
-| Resnet34_Unet 是由 Unet 改過來的，主要是把 Down-sampling 的過過程由 Resnet34 取代，因此原本的 `_double_conv` 以 `_residual_block` 取代，每一個 Convolution Layer 都由 `Conv2d` + `BatchNorm2d` + `ReLU` 實現，除了層數外沒有變動太多。 |
+| Resnet34_Unet 是由 Unet 改過來的，主要是把 Down-sampling 的過過程由 Resnet34 取代，因此原本的 `_double_conv` 以 `_residual_block` 取代，每一個 Convolution Layer 都由 `Conv2d` + `BatchNorm2d` + `ReLU` 實現，除了層數外沒有變動太多，沒有變動太多的原因是原本提供的參考資料模型參數明顯下降許多，我不想要參數下降而導致模型可能失去準確度，因此 Up-sampling 的過程仍然是保持原本 UNet 的通道數。 |
 
-<!-- C. Anything more you want to mention -->
+---
 
 ## Data Preprocessing
 
@@ -51,6 +59,8 @@ A. Details of your training, evaluating, inferencing code
 |![alt text](./att/DAdataset.png)|
 |----------------------|
 | 在另一個資料集中，由於考慮到 image 與 mask 要做相同的 transform，我只有做一些簡單的資料增強，如水平翻轉、垂直翻轉等(`TF=torchvision.transforms.functional`)，另外正規化只會對 image 做而不會對 binary mask 做，以防在計算DICE Loss 時遇到值域跑掉的問題。|
+
+---
 
 ## Analysis on the experiment results
 
@@ -72,40 +82,110 @@ A. Details of your training, evaluating, inferencing code
 
 ### Inference stage
 
+前面有提到訓練資料的增強可以使模型在沒看過的資料上有更好的表現，下列圖表為四個模型在測試資料上的表現，可以看出以 UNet 為架構的模型，加入資料集增強後 DICE score 從 0.882 提升到 0.891，而以 Resnet34-Unet 為架構的模型則從 0.892 提升到 0.904，這個實驗證明資料集增強是有效的。
+
 #### Simple dataset
 
-|||
-|:---: |     :---:     |
-| UNet | Resnet34_UNet |
+|![alt text](./att/unet_simple.png)|
+|             :---:         |
+|      UNet (DICE=0.882)    |
+| ![alt text](./att/resnet34_unet_simple.png)|
+| Resnet34_UNet (DICE=0.892) |
 
 #### Data Augmentation dataset
 
-|||
-|:---: |     :---:     |
-| UNet | Resnet34_UNet |
+|![alt text](./att/unet_da.png)|
+|             :---:         |
+|      UNet (DICE=0.891)    |
+| ![alt text](./att/resnet34_unet_da.png)|
+| Resnet34_UNet (DICE=0.904) |
 
-C. Anything more you want to mention
+---
 
 ## Execution command
 
 ### Training
 
-```py
-123
+- `-da`很重要，這個參數決定是否使用 data augmentation
+- `-cu`代表是否要使用 checkpoint 做訓練
+- `--history`的用意是避免訓練中途斷掉無法重頭畫 loss & validation curve，加入此參數會從上次中斷的 epoch 開始訓練並保留之前的 loss
+- 其餘的超參數可以自行根據機器調整，模型與對應的`.ckpt`要注意是否正確
 
+```py
+# basic command
+python ./src/train.py --model unet         
+                              resnet34_unet
+# use checkpoint
+python ./src/train.py --model unet -cu --ckpt_path <path/to/ckpt> # --history (if you want to keep the previous loss and start training from the last interrupted epoch)
+
+# hyperparameter
+python ./src/train.py --model unet --lr <learning rate> -b <batch size> -nw <workers> -d <device>
+
+# data augmentation
+python ./src/train.py --model unet -da
 ```
 
 ### Inference
 
-```py
-123
+- **請特別注意**：若要使用有 data augmentation 的模型，必須加入 `-da`，使模型讀取有增強過的資料。
+- `model`為使用的模型，`model_path`則為對應的權重，兩者必須匹配
+- `-sp`是決定是否要儲存模型預測的前10張影像
 
+```py
+# basic command
+python ./src/inference.py --model unet --model_path <path/to/weight>
+python ./src/inference.py --model unet --model_path <path/to/weight_da> -da
+
+# saving prediction mask
+python ./src/inference.py --model unet --model_path <path/to/weight> -sp
 ```
+
+---
 
 ## Discussion
 
-A. What architecture may bring better results?
+### Performence comparison
 
-B. What are the potential research topics in this task?
+#### Network
 
-C. Anything more you want to mention
+從上面結果的篇章來看，可以很明顯地看到不管是在哪一個資料集，我的 Resnet34_UNet 都比 UNet 還要高，這是因為我在 Resnet34_UNet 中的 Up-sampling 過程沒有去降低維度，而是維持原本 UNet 的寫法，這也使得模型整體的參數更多，更多的參數可以學到更多的內容，因此表現當然會比較好。
+
+#### Dataset
+
+另外在資料集的部分，有做過資料增強的可以使模型學到更豐富的資訊，也使得在同一個架構下，以增強資料學習的模型有更好的表現。
+
+### Potential research topics
+
+從以上得到的結論我歸納出兩點可以研究的方向：
+
+**1. 不同資料增強方式的影響**：若是對於不同性質的資料集，是否有符合該性質的增強方式，能夠使得模型有更好的表現，我想是很值得研究的，包含分析資料集特性、對應的增強方式等...。
+
+**2. 模型大小與表現的平衡**：模型輕量化一直是模型落地的目標之一，如何在模型大小與表現上取得平衡，也是未來可以探討的方向。
+
+---
+
+## Prediction Results
+
+### Unet - Simple dataset
+
+|![alt text](./output/unet/image_1.png)|![alt text](./output/unet/image_2.png)|
+|             ---         | --- |
+|![alt text](./output/unet/image_3.png)|![alt text](./output/unet/image_4.png)|
+
+### Unet - Data Augmentation
+
+|![alt text](./output/unet_da/image_1.png)|![alt text](./output/unet_da/image_2.png)|
+|--- | ---|
+|![alt text](./output/unet_da/image_3.png)|![alt text](./output/unet_da/image_4.png)|
+
+### Resnet34 + Unet - Simple dataset
+
+|![alt text](./output/resnet34_unet/image_1.png)|![alt text](./output/resnet34_unet/image_2.png)|
+|             ---         | --- |
+|![alt text](./output/resnet34_unet/image_3.png)|![alt text](./output/resnet34_unet/image_4.png)|
+
+### Resnet34 + Unet - Data Augmentation
+
+|![alt text](./output/resnet34_unet_da/image_1.png)|![alt text](./output/resnet34_unet_da/image_2.png)|
+|--- | ---|
+|![alt text](./output/resnet34_unet_da/image_3.png)|![alt text](./output/resnet34_unet_da/image_4.png)|
