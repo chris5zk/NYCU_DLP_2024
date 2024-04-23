@@ -79,16 +79,16 @@ if __name__ == '__main__':
             loss = criterion(y_pred, y)
             score = 1 - loss
             
-            total_loss += loss
-            total_acc += score
+            total_loss += loss * args.batch_size
+            total_acc += score * args.batch_size
             
             if args.save_pred and idx <= 10:
                 path = output_path + f'image_{idx}'
                 save_pred(y_pred, y, path)
                 idx += 1
 
-    test_loss = total_loss / math.ceil(len(test_dataset) / args.batch_size)
-    test_acc = total_acc / math.ceil(len(test_dataset) / args.batch_size)      
+    test_loss = total_loss / len(test_dataset)
+    test_acc = total_acc / len(test_dataset)     
     
     print('> Testing Loss - {:.4f}'.format(test_loss))
     print('> Testing Accuracy - {:.4f} = {:.2f}%'.format(test_acc, test_acc*100))  
