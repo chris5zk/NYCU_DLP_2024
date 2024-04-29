@@ -91,7 +91,7 @@ class VAE_Model(nn.Module):
             for (img, label) in (pbar := tqdm(train_loader, ncols=120)):
                 img = img.to(self.args.device)
                 label = label.to(self.args.device)
-                loss = self.training_one_step(img, label, adapt_TeacherForcing)
+                loss, img_prev = self.training_one_step(img, label, adapt_TeacherForcing)
                 
                 beta = self.kl_annealing.get_beta()
                 if adapt_TeacherForcing:
@@ -117,21 +117,23 @@ class VAE_Model(nn.Module):
             loss = self.val_one_step(img, label)
             self.tqdm_bar('val', pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
 
-    def training_one_step(self, img, label, adapt_TeacherForcing):
+    def training_one_step(self, img, label, adapt_TeacherForcing, X_prev=None):
         # TODO
         # Encoder
-        X_t = self.frame_transformation(img)
-        P_t = self.label_transformation(label)
-        Z = self.Gaussian_Predictor(X_t, P_t)
+        X = self.frame_transformation(img)
+        P = self.label_transformation(label)
+        Z = self.Gaussian_Predictor(X, P)
         
         # Decoder
-        X_gen = self.Generator(self.Decoder_Fusion(X_t, P_t, Z))
-        
-        # update teacher forcing prob.
+        if adapt_TeacherForcing:
+            X_gen = self.Generator(self.Decoder_Fusion(X, P, Z))
+        else:
+            X_gen = self.Generator(self.Decoder_Fusion(X_prev, P, Z))
         
         # Comupte Loss
+        loss = 0.0
         
-        raise NotImplementedError
+        return loss
     
     def val_one_step(self, img, label):
         # TODO
