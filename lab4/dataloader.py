@@ -23,10 +23,10 @@ class Dataset_Dance(torchData):
         super().__init__()
         assert mode in ['train', 'val'], "There is no such mode !!!"
         if mode == 'train':
-            self.img_folder     = sorted(glob(os.path.join(root, 'train/train_img/*.png')), key=get_key)
+            self.img_folder = sorted(glob(os.path.join(root, 'train/train_img/*.png')), key=get_key)
             self.prefix = 'train'
         elif mode == 'val':
-            self.img_folder     = sorted(glob(os.path.join(root, 'val/val_img/*.png')), key=get_key)
+            self.img_folder = sorted(glob(os.path.join(root, 'val/val_img/*.png')), key=get_key)
             self.prefix = 'val'
         else:
             raise NotImplementedError
