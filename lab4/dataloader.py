@@ -39,7 +39,7 @@ class Dataset_Dance(torchData):
         return int(len(self.img_folder) * self.partial) // self.video_len
 
     def __getitem__(self, index):
-        path = self.img_folder[index] 
+        path = self.img_folder[index]
         imgs, labels = [], []
         
         for i in range(self.video_len):
@@ -51,8 +51,5 @@ class Dataset_Dance(torchData):
 
             imgs.append(self.transform(imgloader(img_name)))
             labels.append(self.transform(imgloader(label_name)))
-            
+        
         return stack(imgs), stack(labels)
-    
-    
-

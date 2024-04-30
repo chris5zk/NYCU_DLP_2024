@@ -34,20 +34,37 @@ def kl_criterion(mu, logvar, batch_size):
 
 class kl_annealing():
     def __init__(self, args, current_epoch=0):
-        # TODO
-        raise NotImplementedError
+        self.current_epoch = current_epoch
+
+        if args.kl_anneal_type == 'Cyclical':
+            self.beta_list = self.frange_cycle_linear(args.kl_anneal_cycle, ratio=args.kl_anneal_ratio)
+        elif args.kl_anneal_type == 'Monotonic':
+            pass
+        else:
+            self.beta_list = [1.0, 1.0]
+        
+        self.beta = self.beta_list[0]
         
     def update(self):
-        # TODO
-        raise NotImplementedError
+        t = self.beta_list.pop(0)
+        self.beta = self.beta_list[0]
+        self.beta_list.append(t)
     
     def get_beta(self):
-        # TODO
-        raise NotImplementedError
+        return self.beta
 
     def frange_cycle_linear(self, n_iter, start=0.0, stop=1.0,  n_cycle=1, ratio=1):
-        # TODO
-        raise NotImplementedError
+        L = np.ones(n_iter) * stop
+        period = n_iter / n_cycle
+        step = (stop-start) / (period*ratio) # linear schedule
+
+        for c in range(n_cycle):
+            v, i = start, 0
+            while v <= stop and (int(i+c*period) < n_iter):
+                L[int(i+c*period)] = v
+                v += step
+                i += 1
+        return L.tolist()
 
 
 class VAE_Model(nn.Module):
@@ -84,25 +101,43 @@ class VAE_Model(nn.Module):
         pass
 
     def training_stage(self):
+        train_loss = []
         for i in range(self.args.num_epoch):
             train_loader = self.train_dataloader()
             adapt_TeacherForcing = True if random.random() < self.tfr else False
+            train_epoch_loss = 0.0
             
             for (img, label) in (pbar := tqdm(train_loader, ncols=120)):
-                img = img.to(self.args.device)
-                label = label.to(self.args.device)
+                img = img.to(self.args.device)      # (B, seq, H, W)
+                label = label.to(self.args.device)  # (B, seq, H, W)
+                
                 loss = self.training_one_step(img, label, adapt_TeacherForcing)
+                mse_loss, kl_loss = loss
                 
                 beta = self.kl_annealing.get_beta()
+                loss = (mse_loss + beta * kl_loss) / self.train_vi_len
+                
+                self.optim.zero_grad()
+                loss.backward()
+                self.optimizer_step()
+                
+                train_epoch_loss += loss.detach().cpu()
+                
                 if adapt_TeacherForcing:
                     self.tqdm_bar('train [TeacherForcing: ON, {:.1f}], beta: {}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
                 else:
                     self.tqdm_bar('train [TeacherForcing: OFF, {:.1f}], beta: {}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
             
+            self.eval()
+            train_loss.append(train_epoch_loss / len(train_loader))
+            
             if self.current_epoch % self.args.per_save == 0:
                 self.save(os.path.join(self.args.save_root, f"epoch={self.current_epoch}.ckpt"))
-                
-            self.eval()
+                title = f'{self.args.kl_anneal_type}: {self.args.kl_anneal_ratio} training loss'
+                fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}.png')
+                curve = 'Training loss: avg={:.2f}'.format(sum(train_loss) / len(train_loss))
+                self.plot(title, fig, curve, self.current_epoch, train_loss)
+            
             self.current_epoch += 1
             self.scheduler.step()
             self.teacher_forcing_ratio_update()
@@ -110,7 +145,7 @@ class VAE_Model(nn.Module):
 
     @torch.no_grad()
     def eval(self):
-        val_loader = self.val_dataloader()
+        val_loader = self.val_dataloader()       
         for (img, label) in (pbar := tqdm(val_loader, ncols=120)):
             img = img.to(self.args.device)
             label = label.to(self.args.device)
@@ -118,25 +153,76 @@ class VAE_Model(nn.Module):
             self.tqdm_bar('val', pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
 
     def training_one_step(self, img, label, adapt_TeacherForcing):
-        # TODO
-        # Encoder
-        X_t = self.frame_transformation(img)
-        P_t = self.label_transformation(label)
-        Z = self.Gaussian_Predictor(X_t, P_t)
+        """ 
+        Args:
+            img     (_torch.tensor_): (batch, seq, ch, h, w)
+            label   (_torch.tensor_): (batch, seq, ch, h, w)
+            adapt_TeacherForcing (_boolean_): Random select by 
+            X_prev  (_torch.tensor_, optional): _description_. Defaults to None.
+        Raises:
+            return the last generative output in images sequence from the previous batch
+        """
+        img = img.permute(1, 0, 2, 3, 4)        # change tensor into (seq, B, C, H, W)
+        label = label.permute(1, 0, 2, 3, 4)    # change tensor into (seq, B, C, H, W)
+        mse_loss, kl_loss = 0.0, 0.0
         
-        # Decoder
-        X_gen = self.Generator(self.Decoder_Fusion(X_t, P_t, Z))
-        
-        # update teacher forcing prob.
-        
-        # Comupte Loss
-        
-        raise NotImplementedError
+        # 1 ~ vid_len
+        for index in range(1, self.train_vi_len):
+            # catch images from same sequence index -> (1, B, C, W)
+            pose_current, frame_current, frame_prev = label[index], img[index], img[index-1]
+            
+            # Predictor
+            P_t = self.label_transformation(pose_current)       # (1, B, C, W)
+            X_t = self.frame_transformation(frame_current)      # (1, B, C, W)
+            z, mu, logvar = self.Gaussian_Predictor(X_t, P_t)   # (2, B, C, W)
+            
+            # Generator
+            if adapt_TeacherForcing or index==1:
+                X_prev = self.frame_transformation(frame_prev)
+            else:
+                X_prev = X_gen
+            
+            # output
+            X_gen = self.Generator(self.Decoder_Fusion(X_prev, P_t, z))
+            
+            # batch loss
+            mse_loss += self.mse_criterion(frame_current, X_gen)
+            kl_loss += kl_criterion(mu, logvar, self.batch_size)
+            
+            frame_prev = frame_current
+            
+        return (mse_loss, kl_loss)
     
     def val_one_step(self, img, label):
-        # TODO
-        raise NotImplementedError
-                
+        img = img.permute(1, 0, 2, 3, 4)        # change tensor into (seq, B, C, H, W)
+        label = label.permute(1, 0, 2, 3, 4)    # change tensor into (seq, B, C, H, W)
+        mse_loss, psnr = 0.0, []
+
+        # 0 ~ vid_len
+        for index in range(1, self.val_vi_len):
+            pose_current, frame_current, frame_prev = label[index], img[index], img[index-1]
+            
+            # Generator
+            P_t = self.label_transformation(pose_current)
+            X_prev = self.frame_transformation(frame_prev)
+            z = torch.randn(1, self.args.N_dim, self.args.frame_H, self.args.frame_W).to(self.args.device)
+            
+            X_gen = self.Generator(self.Decoder_Fusion(X_prev, P_t, z))
+            
+            # loss
+            mse_loss += nn.functional.mse_loss(frame_current, X_gen)
+            psnr.append(Generate_PSNR(frame_current, X_gen).detach().cpu())
+            
+            X_prev = X_gen
+        
+        if self.current_epoch % self.args.per_save == 0:
+            title = 'Validation PSNR'
+            fig = os.path.join(self.args.save_root, f'PSNR-epoch={self.current_epoch}.png')
+            curve = 'Val PSNR: avg={:.2f}'.format(sum(psnr)/len(psnr))
+            self.plot(title, fig, curve, self.val_vi_len-2, psnr)
+        
+        return mse_loss / self.val_vi_len
+
     def make_gif(self, images_list, img_name):
         new_list = []
         for img in images_list:
@@ -177,8 +263,13 @@ class VAE_Model(nn.Module):
         return val_loader
 
     def teacher_forcing_ratio_update(self):
-        # TODO
-        raise NotImplementedError
+        if self.current_epoch >= self.tfr_sde:
+            if self.tfr - self.tfr_d_step > 0:
+                return self.tfr - self.tfr_d_step
+            else:
+                return 0
+        else:
+            return
 
     def tqdm_bar(self, mode, pbar, loss, lr):
         pbar.set_description(f"({mode}) Epoch {self.current_epoch}, lr:{lr}" , refresh=False)
@@ -194,6 +285,15 @@ class VAE_Model(nn.Module):
             "last_epoch": self.current_epoch
         }, path)
         print(f"save ckpt to {path}")
+
+    def plot(self, title, fig, curve, range_, y):
+        x = range(range_+1)
+        plt.title(title)
+        plt.plot(x, y, 'b', label=curve)
+        plt.legend(loc='upper left')
+        plt.savefig(fig)
+        plt.clf()
+        print(f'save plot at {fig}')
 
     def load_checkpoint(self):
         if self.args.ckpt_path != None:
@@ -213,6 +313,8 @@ class VAE_Model(nn.Module):
 
 
 def main(args):
+    save_root = args.save_root + '/' + f'{args.kl_anneal_type}-{args.kl_anneal_cycle}-{args.kl_anneal_ratio}_TFr-{args.tfr}-{args.tfr_sde}-{args.tfr_d_step}'
+    args.save_root = save_root
     os.makedirs(args.save_root, exist_ok=True)
     model = VAE_Model(args).to(args.device)
     model.load_checkpoint()
@@ -226,7 +328,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument('--batch_size',    type=int,    default=2)
     parser.add_argument('--lr',            type=float,  default=0.001,     help="initial learning rate")
-    parser.add_argument('--device',        type=str, choices=["cuda", "cpu"], default="cuda")
+    parser.add_argument('--device',        type=str, choices=["cuda:0", "cuda:1"], default="cuda:0")
     parser.add_argument('--optim',         type=str, choices=["Adam", "AdamW"], default="Adam")
     parser.add_argument('--gpu',           type=int, default=1)
     parser.add_argument('--test',          action='store_true')
@@ -241,7 +343,6 @@ if __name__ == '__main__':
     parser.add_argument('--val_vi_len',    type=int, default=630,    help="valdation video length")
     parser.add_argument('--frame_H',       type=int, default=32,     help="Height input image to be resize")
     parser.add_argument('--frame_W',       type=int, default=64,     help="Width input image to be resize")
-    
     
     # Module parameters setting
     parser.add_argument('--F_dim',         type=int, default=128,    help="Dimension of feature human frame")

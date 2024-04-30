@@ -45,6 +45,7 @@ class Dataset_Dance(torchData):
         self.label_folder = []
         
         data_num = len(glob('./Demo_Test/*'))
+        data_num = 5
         for i in range(data_num):
             self.img_folder.append(sorted(glob(os.path.join(root , f'test/test_img/{i}/*')), key=get_key))
             self.label_folder.append(sorted(glob(os.path.join(root , f'test/test_label/{i}/*')), key=get_key))
@@ -117,11 +118,22 @@ class Test_model(VAE_Model):
         # Both list will be used to make gif
         decoded_frame_list = [img[0].cpu()]
         label_list = []
-
-        # TODO
-        raise NotImplementedError
-            
+        X_prev = img[0]
         
+        for index in range(1, self.val_vi_len):
+            pose_current = label[index]
+            
+            # Generator
+            P_t = self.label_transformation(pose_current)
+            X_prev = self.frame_transformation(X_prev)
+            z = torch.randn(1, self.args.N_dim, self.args.frame_H, self.args.frame_W).to(self.args.device)
+            
+            X_gen = self.Generator(self.Decoder_Fusion(X_prev, P_t, z))
+            X_prev = X_gen
+            
+            decoded_frame_list.append(X_gen.detach().cpu())
+            label_list.append(pose_current.detach().cpu())
+            
         # Please do not modify this part, it is used for visulization
         generated_frame = stack(decoded_frame_list).permute(1, 0, 2, 3, 4)
         label_frame = stack(label_list).permute(1, 0, 2, 3, 4)
@@ -149,6 +161,7 @@ class Test_model(VAE_Model):
             transforms.ToTensor()
         ])
         dataset = Dataset_Dance(root=self.args.DR, transform=transform, video_len=self.val_vi_len)  
+
         val_loader = DataLoader(dataset,
                                 batch_size=1,
                                 num_workers=self.args.num_workers,
