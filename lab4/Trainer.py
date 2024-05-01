@@ -39,7 +39,11 @@ class kl_annealing():
         if args.kl_anneal_type == 'Cyclical':
             self.beta_list = self.frange_cycle_linear(args.kl_anneal_cycle, ratio=args.kl_anneal_ratio)
         elif args.kl_anneal_type == 'Monotonic':
-            pass
+            gap = 1 / args.kl_anneal_cycle
+            _list = [0.0]
+            for _ in range(1, args.kl_anneal_cycle):
+                _list.appned(_list[-1] + gap)
+            self.bata_list = _list
         else:
             self.beta_list = [1.0, 1.0]
         
@@ -128,11 +132,12 @@ class VAE_Model(nn.Module):
                 else:
                     self.tqdm_bar('train [TeacherForcing: OFF, {:.1f}], beta: {}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
             
-            self.eval()
             train_loss.append(train_epoch_loss / len(train_loader))
             
             if self.current_epoch % self.args.per_save == 0:
+                self.eval()
                 self.save(os.path.join(self.args.save_root, f"epoch={self.current_epoch}.ckpt"))
+                
                 title = f'{self.args.kl_anneal_type}: {self.args.kl_anneal_ratio} training loss'
                 fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}.png')
                 curve = 'Training loss: avg={:.2f}'.format(sum(train_loss) / len(train_loss))
@@ -165,7 +170,7 @@ class VAE_Model(nn.Module):
         img = img.permute(1, 0, 2, 3, 4)        # change tensor into (seq, B, C, H, W)
         label = label.permute(1, 0, 2, 3, 4)    # change tensor into (seq, B, C, H, W)
         mse_loss, kl_loss = 0.0, 0.0
-        
+
         # 1 ~ vid_len
         for index in range(1, self.train_vi_len):
             # catch images from same sequence index -> (1, B, C, W)
@@ -180,7 +185,7 @@ class VAE_Model(nn.Module):
             if adapt_TeacherForcing or index==1:
                 X_prev = self.frame_transformation(frame_prev)
             else:
-                X_prev = X_gen
+                X_prev = self.frame_transformation(X_gen)
             
             # output
             X_gen = self.Generator(self.Decoder_Fusion(X_prev, P_t, z))
@@ -197,14 +202,15 @@ class VAE_Model(nn.Module):
         img = img.permute(1, 0, 2, 3, 4)        # change tensor into (seq, B, C, H, W)
         label = label.permute(1, 0, 2, 3, 4)    # change tensor into (seq, B, C, H, W)
         mse_loss, psnr = 0.0, []
+        X_prev = img[0]
 
         # 0 ~ vid_len
         for index in range(1, self.val_vi_len):
-            pose_current, frame_current, frame_prev = label[index], img[index], img[index-1]
+            pose_current, frame_current = label[index], img[index]
             
             # Generator
             P_t = self.label_transformation(pose_current)
-            X_prev = self.frame_transformation(frame_prev)
+            X_prev = self.frame_transformation(X_prev)
             z = torch.randn(1, self.args.N_dim, self.args.frame_H, self.args.frame_W).to(self.args.device)
             
             X_gen = self.Generator(self.Decoder_Fusion(X_prev, P_t, z))
@@ -264,12 +270,7 @@ class VAE_Model(nn.Module):
 
     def teacher_forcing_ratio_update(self):
         if self.current_epoch >= self.tfr_sde:
-            if self.tfr - self.tfr_d_step > 0:
-                return self.tfr - self.tfr_d_step
-            else:
-                return 0
-        else:
-            return
+            self.tfr = self.tfr - self.tfr_d_step if (self.tfr-self.tfr_d_step) > 0.0 else 0.0
 
     def tqdm_bar(self, mode, pbar, loss, lr):
         pbar.set_description(f"({mode}) Epoch {self.current_epoch}, lr:{lr}" , refresh=False)
