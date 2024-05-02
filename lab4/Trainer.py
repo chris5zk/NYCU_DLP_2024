@@ -35,6 +35,7 @@ def kl_criterion(mu, logvar, batch_size):
 class kl_annealing():
     def __init__(self, args, current_epoch=0):
         self.current_epoch = current_epoch
+        self.kl_anneal_type = args.kl_anneal_type
 
         if args.kl_anneal_type == 'Cyclical':
             self.beta_list = self.frange_cycle_linear(args.kl_anneal_cycle, ratio=args.kl_anneal_ratio)
@@ -42,25 +43,35 @@ class kl_annealing():
             gap = 1 / args.kl_anneal_cycle
             _list = [0.0]
             for _ in range(1, args.kl_anneal_cycle):
-                _list.appned(_list[-1] + gap)
-            self.bata_list = _list
+                _list.append(_list[-1] + gap)
+            _list.append(1.0)
+            self.beta_list = _list
         else:
             self.beta_list = [1.0, 1.0]
         
         self.beta = self.beta_list[0]
         
     def update(self):
-        t = self.beta_list.pop(0)
-        self.beta = self.beta_list[0]
-        self.beta_list.append(t)
+        if self.kl_anneal_type == 'Cyclical':
+            t = self.beta_list.pop(0)
+            self.beta = self.beta_list[0]
+            self.beta_list.append(t)
+        elif self.kl_anneal_type == 'Monotonic':
+            if len(self.beta_list) == 0:
+                self.beta = 1.0
+            else:
+                t = self.beta_list.pop(0)
+                self.beta = t
+        else:
+            self.beta = 1.0
     
     def get_beta(self):
         return self.beta
 
     def frange_cycle_linear(self, n_iter, start=0.0, stop=1.0,  n_cycle=1, ratio=1):
-        L = np.ones(n_iter) * stop
-        period = n_iter / n_cycle
-        step = (stop-start) / (period*ratio) # linear schedule
+        L = np.ones(n_iter) * stop              # (10, ) 1
+        period = n_iter / n_cycle               # 10.0
+        step = (stop-start) / (period*ratio)    # linear schedule  0.1
 
         for c in range(n_cycle):
             v, i = start, 0
@@ -68,6 +79,7 @@ class kl_annealing():
                 L[int(i+c*period)] = v
                 v += step
                 i += 1
+                
         return L.tolist()
 
 
@@ -87,12 +99,13 @@ class VAE_Model(nn.Module):
         # Generative model
         self.Generator     = Generator(input_nc=args.D_out_dim, output_nc=3)
         self.optim         = optim.Adam(self.parameters(), lr=self.args.lr)
-        self.scheduler     = optim.lr_scheduler.MultiStepLR(self.optim, milestones=[2, 5], gamma=0.1)
+        self.scheduler     = optim.lr_scheduler.MultiStepLR(self.optim, milestones=[2, 20], gamma=0.1)
         self.kl_annealing  = kl_annealing(args, current_epoch=0)
         self.mse_criterion = nn.MSELoss()
         self.current_epoch = 0
         
         # Teacher forcing arguments
+        self.fix_ratio    = args.fix_ratio
         self.tfr          = args.tfr
         self.tfr_d_step   = args.tfr_d_step
         self.tfr_sde      = args.tfr_sde
@@ -105,7 +118,7 @@ class VAE_Model(nn.Module):
         pass
 
     def training_stage(self):
-        train_loss = []
+        train_loss, tfr_epoch = [], []
         for i in range(self.args.num_epoch):
             train_loader = self.train_dataloader()
             adapt_TeacherForcing = True if random.random() < self.tfr else False
@@ -128,24 +141,33 @@ class VAE_Model(nn.Module):
                 train_epoch_loss += loss.detach().cpu()
                 
                 if adapt_TeacherForcing:
-                    self.tqdm_bar('train [TeacherForcing: ON, {:.1f}], beta: {}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
+                    self.tqdm_bar('train [TeacherForcing: ON, {:.1f}], beta: {:.2f}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
                 else:
-                    self.tqdm_bar('train [TeacherForcing: OFF, {:.1f}], beta: {}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
+                    self.tqdm_bar('train [TeacherForcing: OFF, {:.1f}], beta: {:.2f}'.format(self.tfr, beta), pbar, loss.detach().cpu(), lr=self.scheduler.get_last_lr()[0])
             
             train_loss.append(train_epoch_loss / len(train_loader))
+            tfr_epoch.append(self.tfr)
             
             if self.current_epoch % self.args.per_save == 0:
                 self.eval()
                 self.save(os.path.join(self.args.save_root, f"epoch={self.current_epoch}.ckpt"))
                 
+                # training loss
                 title = f'{self.args.kl_anneal_type}: {self.args.kl_anneal_ratio} training loss'
-                fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}.png')
+                fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}_Loss.png')
                 curve = 'Training loss: avg={:.2f}'.format(sum(train_loss) / len(train_loss))
                 self.plot(title, fig, curve, self.current_epoch, train_loss)
+                
+                # teacher forcing ratio
+                title = f'{self.args.kl_anneal_type}: {self.args.kl_anneal_ratio} teacher forcing curve'
+                fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}_Tfr.png')
+                curve = 'Teacher forcing: ratio={}'.format(self.args.tfr_d_step)
+                self.plot(title, fig, curve, self.current_epoch, tfr_epoch)
             
             self.current_epoch += 1
             self.scheduler.step()
-            self.teacher_forcing_ratio_update()
+
+            self.teacher_forcing_ratio_update()       
             self.kl_annealing.update()
 
     @torch.no_grad()
@@ -270,7 +292,10 @@ class VAE_Model(nn.Module):
 
     def teacher_forcing_ratio_update(self):
         if self.current_epoch >= self.tfr_sde:
-            self.tfr = self.tfr - self.tfr_d_step if (self.tfr-self.tfr_d_step) > 0.0 else 0.0
+            if self.fix_ratio:
+                self.tfr = 0.5
+            else:
+                self.tfr = self.tfr - self.tfr_d_step if (self.tfr-self.tfr_d_step) > 0.0 else 0.0
 
     def tqdm_bar(self, mode, pbar, loss, lr):
         pbar.set_description(f"({mode}) Epoch {self.current_epoch}, lr:{lr}" , refresh=False)
@@ -352,6 +377,7 @@ if __name__ == '__main__':
     parser.add_argument('--D_out_dim',     type=int, default=192,    help="Dimension of the output in Decoder_Fusion")
     
     # Teacher Forcing strategy
+    parser.add_argument('--fix_ratio',     action='store_true')
     parser.add_argument('--tfr',           type=float, default=1.0,  help="The initial teacher forcing ratio")
     parser.add_argument('--tfr_sde',       type=int,   default=10,   help="The epoch that teacher forcing ratio start to decay")
     parser.add_argument('--tfr_d_step',    type=float, default=0.1,  help="Decay step that teacher forcing ratio adopted")
