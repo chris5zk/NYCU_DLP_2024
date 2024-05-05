@@ -4,7 +4,7 @@
 
 ## Derivate CVAE formula
 
-> picture
+![alt text](./att/CVAE.png)
 
 ## Introduction
 
