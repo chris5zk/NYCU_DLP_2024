@@ -99,7 +99,7 @@ class VAE_Model(nn.Module):
         # Generative model
         self.Generator     = Generator(input_nc=args.D_out_dim, output_nc=3)
         self.optim         = optim.Adam(self.parameters(), lr=self.args.lr)
-        self.scheduler     = optim.lr_scheduler.MultiStepLR(self.optim, milestones=[2, 20], gamma=0.1)
+        self.scheduler     = optim.lr_scheduler.MultiStepLR(self.optim, milestones=[2, 20, 80, 100], gamma=0.1)
         self.kl_annealing  = kl_annealing(args, current_epoch=0)
         self.mse_criterion = nn.MSELoss()
         self.current_epoch = 0
@@ -156,13 +156,13 @@ class VAE_Model(nn.Module):
                 title = f'{self.args.kl_anneal_type}: {self.args.kl_anneal_ratio} training loss'
                 fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}_Loss.png')
                 curve = 'Training loss: avg={:.2f}'.format(sum(train_loss) / len(train_loss))
-                self.plot(title, fig, curve, self.current_epoch, train_loss)
+                self.plot(title, fig, curve, len(train_loss), train_loss)
                 
                 # teacher forcing ratio
                 title = f'{self.args.kl_anneal_type}: {self.args.kl_anneal_ratio} teacher forcing curve'
                 fig = os.path.join(self.args.save_root, f'epoch={self.current_epoch}_Tfr.png')
                 curve = 'Teacher forcing: ratio={}'.format(self.args.tfr_d_step)
-                self.plot(title, fig, curve, self.current_epoch, tfr_epoch)
+                self.plot(title, fig, curve, len(train_loss), tfr_epoch)
             
             self.current_epoch += 1
             self.scheduler.step()
@@ -247,7 +247,7 @@ class VAE_Model(nn.Module):
             title = 'Validation PSNR'
             fig = os.path.join(self.args.save_root, f'PSNR-epoch={self.current_epoch}.png')
             curve = 'Val PSNR: avg={:.2f}'.format(sum(psnr)/len(psnr))
-            self.plot(title, fig, curve, self.val_vi_len-2, psnr)
+            self.plot(title, fig, curve, self.val_vi_len-1, psnr)
         
         return mse_loss / self.val_vi_len
 
@@ -313,7 +313,7 @@ class VAE_Model(nn.Module):
         print(f"save ckpt to {path}")
 
     def plot(self, title, fig, curve, range_, y):
-        x = range(range_+1)
+        x = range(range_)
         plt.title(title)
         plt.plot(x, y, 'b', label=curve)
         plt.legend(loc='upper left')
