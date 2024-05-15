@@ -1,10 +1,10 @@
 # my ignore
 **/dataset/
-**/checkpoint/
-**/weight/
+**/checkpoint*/
+**/weight*/
 **/saved_model/
-**/input/
-**/output/
+**/input*/
+**/output*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

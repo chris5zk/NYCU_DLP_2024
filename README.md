@@ -7,3 +7,5 @@
 ## Lab3: Binary Semantic Segmentation
 
 ## Lab4: Conditional VAE for Video Prediction
+
+## Lab5: MaskGIT for Omage Inpainting
