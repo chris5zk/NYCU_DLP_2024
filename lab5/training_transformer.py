@@ -55,7 +55,7 @@ class TrainTransformer:
             # optimize
             self.optim.zero_grad()
             loss.backward()
-            self.optim.step
+            self.optim.step()
             
             # tqdm bar
             desp = f'Train - Epoch {epoch}/{args.epochs}, lr:{self.optim.state_dict()["param_groups"][0]["lr"]}'
@@ -64,25 +64,11 @@ class TrainTransformer:
             epoch_loss += loss
             
         epoch_loss /= len(train_loader)
-            
-        if epoch % args.pt_save_per_epoch == 0:
-            torch.save(self.model.state_dict(), f'./transformer_weights/epoch={epoch}.pt')
-            print(f'> Save model weight at ./transformer_weights/epoch={epoch}.pt')
-            
-        if epoch % args.ckpt_save_per_epoch == 0:
-            torch.save({
-                "state_dict":   self.model.state_dict(),
-                "optimizer" :   self.optim.state_dict(),
-                "lr"        :   self.scheduler.state_dict(),
-                "last_epoch":   epoch
-            }, f'./transformer_checkpoints/epoch={epoch}.ckpt')
-            print(f'> Save checkpoint at ./transformer_checkpoints/epoch={epoch}.ckpt')
-        
         self.scheduler.step(epoch_loss)
         
         return epoch_loss
 
-    def eval_one_epoch(self, args, val_loader, criterion):
+    def eval_one_epoch(self, args, epoch, val_loader, criterion):
         epoch_loss = 0.0
         for x in (pbar := tqdm(val_loader)):
             x = x.to(args.device)
@@ -90,6 +76,10 @@ class TrainTransformer:
             # predict
             logits, target = self.model(x)
             loss = criterion(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
+            
+            # tqdm bar
+            desp = f'Val - Epoch {epoch}/{args.epochs}'
+            tqdm_bar(pbar, desp, loss)
             
             # loss
             epoch_loss += loss
@@ -103,6 +93,11 @@ class TrainTransformer:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
         return optimizer, scheduler
 
+    def load_checkpoint(self, ckpt_path):
+        checkpoint = torch.load(ckpt_path)
+        self.model.load_state_dict(checkpoint['model'], strict=True) 
+        self.optim.load_state_dict(checkpoint['optimizer'])
+        self.scheduler.load_state_dict(checkpoint['scheduler'])
 
 def main(args):
     # model config
@@ -130,7 +125,10 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     
     # checkpoint
-    ###
+    if args.use_ckpt:
+        train_transformer.load_checkpoint(args.checkpoint_path)
+    
+    # config claim
     
     
 #TODO2 step1-5:
@@ -142,19 +140,33 @@ def main(args):
         avg_train_loss = sum(train_loss_total)/len(train_loss_total)
         
         # validate stage
-        val_loss = train_transformer.eval_one_epoch(args, epoch, val_loader, criterion)
+        val_loss = train_transformer.eval_one_epoch(args, val_loader, criterion)
         val_loss_total.append(val_loss)
         avg_val_loss = sum(val_loss_total)/len(val_loss_total)
 
         print(f'> Training Loss - {train_loss:.3f}, Training Avg. - {avg_train_loss:.3f}, Validation Loss - {val_loss:.3f}, Validation Avg. {avg_val_loss:.3f}') 
 
+        # save model
         if epoch % args.pt_save_per_epoch == 0:
+            path = train_transformer.pt_path + '/' + f'epoch={epoch}.pt'
+            torch.save(train_transformer.model.state_dict(), path)
+            print(f'> Save model weight at {path}')
+            
             path = './output/plots' + '/' + f'epoch={epoch}.png'
             title = f'Epoch {epoch} performance'
             curve1 = f'Training Loss: avg. {avg_train_loss:.2f}'
             curve2 = f'Validate Loss: avg. {avg_val_loss:.2f}'
             plot(title, train_loss_total, val_loss_total, curve1, curve2, path)
             print(f'> Save loss curve at {path}')
+            
+        if epoch % args.ckpt_save_per_epoch == 0:
+            path = train_transformer.ckpt_path + '/' + f'epoch={epoch}.ckpt'
+            torch.save({
+                "model":        train_transformer.model.state_dict(),
+                "optimizer" :   train_transformer.optim.state_dict(),
+                "scheduler" :   train_transformer.scheduler.state_dict(),
+            }, path)
+            print(f'> Save checkpoint at {path}')
 
 
 if __name__ == '__main__':
@@ -162,20 +174,23 @@ if __name__ == '__main__':
     # TODO2:check your dataset path is correct 
     parser.add_argument('--train_d_path', type=str, default="./dataset/cat_face/train/", help='Training Dataset Path')
     parser.add_argument('--val_d_path', type=str, default="./dataset/cat_face/val/", help='Validation Dataset Path')
+    
+    parser.add_argument('--use_ckpt', action='store_true', help='Use checkpoint for training or not')
     parser.add_argument('--checkpoint_path', type=str, default='./checkpoints/last_ckpt.pt', help='Path to checkpoint.')
+    
     parser.add_argument('--device', type=str, default="cuda:0", help='Which device the training is on.')
     parser.add_argument('--num_workers', type=int, default=12, help='Number of worker')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size for training.')
+    parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training.')
     parser.add_argument('--partial', type=float, default=1.0, help='Dataset splitten')
     parser.add_argument('--accum_grad', type=int, default=10, help='Number for gradient accumulation.')
 
     # you can modify the hyperparameters 
-    parser.add_argument('--epochs', type=int, default=5, help='Number of epochs to train.')
+    parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
     parser.add_argument('--pt_save_per_epoch', type=int, default=1, help='Save PT per ** epochs(defcault: 10)')
     parser.add_argument('--ckpt_save_per_epoch', type=int, default=1, help='Save CKPT per ** epochs(defcault: 1)')
     parser.add_argument('--start_from_epoch', type=int, default=0, help='Number of epochs to train.')
     parser.add_argument('--ckpt_interval', type=int, default=0, help='Number of epochs to train.')
-    parser.add_argument('--lr', type=float, default=0.001, help='Learning rate.')
+    parser.add_argument('--lr', type=float, default=1e-5, help='Learning rate.')
 
     parser.add_argument('--MaskGitConfig', type=str, default='config/MaskGit.yml', help='Configurations for TransformerVQGAN')
     args = parser.parse_args()
