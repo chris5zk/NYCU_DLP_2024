@@ -30,7 +30,7 @@ python inpainting.py
 ## TODO
 - [x] Dataset Download 
 - [x] MaskGIT STAGE1 Training enc, codebook, dec... Pretrained Weight (./models/VQGAN/checkpoints/)
-- [ ] MultiHeadAttetion forward (./models/Transformer/modules/layers.py class MultiHeadAttetion)
+- [x] MultiHeadAttetion forward (./models/Transformer/modules/layers.py class MultiHeadAttetion)
 - [ ] MaskGIT STAGE2 Training Transformer (./training_transformer.py ./models/VQGAN_Transformer.py)
 - [ ] Implement functions for inpainting (./inpainting.py ./models/VQGAN_Transformer.py)
 - [ ] Experiment Score

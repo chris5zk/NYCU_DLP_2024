@@ -31,13 +31,14 @@ class MaskGit(nn.Module):
         model = model.eval()
         return model
     
-##TODO2 step1-1: input x fed to vqgan encoder to get the latent and zq
+    ##TODO2 step1-1: input x fed to vqgan encoder to get the latent and zq
     @torch.no_grad()
     def encode_to_z(self, x):
-        raise Exception('TODO2 step1-1!')
-        return None
+        z_quant, z_indices, _ = self.vqgan.encode(x)
+        z_indices = z_indices.view(z_quant.shape[0], -1)
+        return z_indices
     
-##TODO2 step1-2:    
+    ##TODO2 step1-2:    
     def gamma_func(self, mode="cosine"):
         """Generates a mask rate by scheduling mask functions R.
 
@@ -51,26 +52,40 @@ class MaskGit(nn.Module):
 
         """
         if mode == "linear":
-            raise Exception('TODO2 step1-2!')
-            return None
+            return lambda r: 1 - r
         elif mode == "cosine":
-            raise Exception('TODO2 step1-2!')
-            return None
+            return lambda r: np.cos(r * np.pi / 2)
         elif mode == "square":
-            raise Exception('TODO2 step1-2!')
-            return None
+            return lambda r: 1 - r ** 2
         else:
             raise NotImplementedError
 
-##TODO2 step1-3:            
+    ##TODO2 step1-3:            
     def forward(self, x):
+        """
+            z_indices:  (batch_size, num_tokens)
+            logits:     (batch_size, num_tokens, num_codebook_vectors+1)
+        """
+        z_indices = self.encode_to_z(x)         # ground truth
         
-        z_indices=None #ground truth
-        logits = None  #transformer predict the probability of tokens
-        raise Exception('TODO2 step1-3!')
+        # # masking
+        # sos_tokens = torch.ones(x.shape[0], 1, dtype=torch.long, device=z_indices.device) * self.sos_token
+        
+        # r = math.floor(self.gamma(np.random.uniform()) * z_indices.shape[1])
+        # sample = torch.rand(z_indices.shape, device=z_indices.device).topk(r, dim=1).indices
+        # mask = torch.zeros(z_indices.shape, dtype=torch.bool, device=z_indices.device)
+        # mask.scatter_(dim=1, index=sample, value=True)
+        # masked_indices = self.mask_token_id * torch.ones_like(z_indices, device=z_indices.device)
+        
+        # a_indices = mask * z_indices + (~mask) * masked_indices
+        # a_indices = torch.cat((sos_tokens, a_indices), dim=1)
+        # target = torch.cat((sos_tokens, z_indices), dim=1)
+        
+        logits = self.transformer(z_indices)    # transformer predict the probability of tokens
+        
         return logits, z_indices
     
-##TODO3 step1-1: define one iteration decoding   
+    ##TODO3 step1-1: define one iteration decoding   
     @torch.no_grad()
     def inpainting(self):
         raise Exception('TODO3 step1-1!')
