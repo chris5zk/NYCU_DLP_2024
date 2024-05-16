@@ -68,20 +68,20 @@ class MaskGit(nn.Module):
         """
         z_indices = self.encode_to_z(x)         # ground truth
         
-        # # masking
+        # masking
         # sos_tokens = torch.ones(x.shape[0], 1, dtype=torch.long, device=z_indices.device) * self.sos_token
         
-        # r = math.floor(self.gamma(np.random.uniform()) * z_indices.shape[1])
-        # sample = torch.rand(z_indices.shape, device=z_indices.device).topk(r, dim=1).indices
-        # mask = torch.zeros(z_indices.shape, dtype=torch.bool, device=z_indices.device)
-        # mask.scatter_(dim=1, index=sample, value=True)
-        # masked_indices = self.mask_token_id * torch.ones_like(z_indices, device=z_indices.device)
+        r = math.floor(self.gamma(np.random.uniform()) * z_indices.shape[1])
+        sample = torch.rand(z_indices.shape, device=z_indices.device).topk(r, dim=1).indices
+        mask = torch.zeros(z_indices.shape, dtype=torch.bool, device=z_indices.device)
+        mask.scatter_(dim=1, index=sample, value=True)
+        masked_indices = self.mask_token_id * torch.ones_like(z_indices, device=z_indices.device)
         
-        # a_indices = mask * z_indices + (~mask) * masked_indices
+        a_indices = mask * z_indices + (~mask) * masked_indices
         # a_indices = torch.cat((sos_tokens, a_indices), dim=1)
         # target = torch.cat((sos_tokens, z_indices), dim=1)
         
-        logits = self.transformer(z_indices)    # transformer predict the probability of tokens
+        logits = self.transformer(a_indices)    # transformer predict the probability of tokens
         
         return logits, z_indices
     
