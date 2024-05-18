@@ -186,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_ckpt', action='store_true', help='Use checkpoint for training or not')
     parser.add_argument('--checkpoint_path', type=str, default='./checkpoints/last_ckpt.pt', help='Path to checkpoint.')
     
-    parser.add_argument('--device', type=str, default="cuda:0", help='Which device the training is on.')
+    parser.add_argument('--device', type=str, default="cuda:1", help='Which device the training is on.')
     parser.add_argument('--num_workers', type=int, default=8, help='Number of worker')
     parser.add_argument('--train_batch_size', type=str, default=32, help='Batch size for training.')
     parser.add_argument('--val_batch_size', type=int, default=32, help='Batch size for validation.')
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     parser.add_argument('--accum_grad', type=int, default=10, help='Number for gradient accumulation.')
 
     # you can modify the hyperparameters 
-    parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
+    parser.add_argument('--epochs', type=int, default=60, help='Number of epochs to train.')
     parser.add_argument('--pt_save_per_epoch', type=int, default=20, help='Save PT per ** epochs(defcault: 10)')
     parser.add_argument('--ckpt_save_per_epoch', type=int, default=10, help='Save CKPT per ** epochs(defcault: 1)')
     parser.add_argument('--start_from_epoch', type=int, default=0, help='Number of epochs to train.')

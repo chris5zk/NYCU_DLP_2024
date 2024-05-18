@@ -11,7 +11,7 @@
         num_image_tokens: 256
         num_codebook_vectors: 1024
         choice_temperature: 4.5
-        gamma_type: cosine
+        gamma_type: linear
 
         Transformer_param:
             num_image_tokens: 256

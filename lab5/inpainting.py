@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from PIL import Image
+from tqdm import tqdm
 
 import torch
 import torch.nn.functional as F
@@ -51,7 +52,7 @@ class MaskGIT:
             z_indices = self.model.encode_to_z(image)            # z_indices: masked tokens (b, 16*16)
             mask_num = mask_b.sum()                              # total number of mask token -> N
             mask_bc = mask_b
-            
+
             mask_b = mask_b.to(device=self.device)
             mask_bc = mask_bc.to(device=self.device)
             
@@ -63,7 +64,6 @@ class MaskGIT:
                 if step == self.sweet_spot:
                     break
                 ratio = step / self.total_iter                # this should be updated
-                
                 z_indices_predict, mask_bc = self.model.inpainting(z_indices_predict, mask_bc, ratio, mask_num, self.mask_func)
                 
                 # static method yon can modify or not, make sure your visualization results are correct
@@ -88,7 +88,6 @@ class MaskGIT:
             # demo score 
             vutils.save_image(maska, os.path.join(self.args.output + '/' + "mask_scheduling", f"test_{i}.png"), nrow=10) 
             vutils.save_image(imga, os.path.join(self.args.output + '/' + "imga", f"test_{i}.png"), nrow=7)
-
 
 
 class MaskedImage:
@@ -124,9 +123,9 @@ def main(args):
     t = MaskedImage(args)
     MaskGit_CONFIGS = yaml.safe_load(open(args.MaskGitConfig, 'r'))
     maskgit = MaskGIT(args, MaskGit_CONFIGS)
-
+    
     i = 0
-    for image, mask in zip(t.mi_ori, t.mask_ori):
+    for image, mask in tqdm(zip(t.mi_ori, t.mask_ori)):
         image = image.to(device=args.device)
         mask = mask.to(device=args.device)
         mask_b = t.get_mask_latent(mask)       
@@ -144,7 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--MaskGitConfig', type=str, default='config/MaskGit.yml', help='Configurations for MaskGIT')
     
 #TODO3 step1-2: modify the path, MVTM parameters
-    parser.add_argument('--load-transformer-ckpt-path', type=str, default='./output/transformer_weights/epoch=100.pt', help='load ckpt')
+    parser.add_argument('--load-transformer-ckpt-path', type=str, default='./output/cosine/transformer_weights/epoch=100.pt', help='load ckpt')
     
     # dataset path
     parser.add_argument('--test-maskedimage-path', type=str, default='./dataset/cat_face/masked_image', help='Path to testing image dataset.')
