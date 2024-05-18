@@ -8,7 +8,7 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, dim=768, num_heads=16, attn_drop=0.1):
         super(MultiHeadAttention, self).__init__()
         assert(dim % num_heads == 0)
-        self.attention = nn.ModuleList([scaled_dot_product_attention(dim, dim//num_heads, attn_drop) for _ in range(num_heads)])
+        self.attention = scaled_dot_product_attention(dim, dim//num_heads, num_heads, attn_drop)
         self.linear_proj = nn.Linear(dim, dim)
 
     def forward(self, x):
@@ -19,39 +19,36 @@ class MultiHeadAttention(nn.Module):
             Total d_k , d_v set to 768
             d_k , d_v for one head will be 768//16.
         '''
-        for i, head in enumerate(self.attention):
-            if i == 0:
-                out = head(x)
-            else:
-                out = torch.cat((out, head(x)), axis=-1)
+        out = self.attention(x)
         out = self.linear_proj(out)
         return out
     
 class scaled_dot_product_attention(nn.Module):
-    def __init__(self, d_model, d_head, attn_drop) -> None:
+    def __init__(self, d_model, d_head, num_heads, attn_drop) -> None:
         super().__init__()
-        self.scaling_factor = torch.sqrt(torch.tensor(d_model))
-        self.W_q, self.W_k, self.W_v = nn.Linear(d_model, d_head), nn.Linear(d_model, d_head), nn.Linear(d_model, d_head)
-        self.W_o = nn.Linear(d_model, d_head)
+        dim_aggr = d_head * num_heads
+        self.scale = torch.sqrt(torch.tensor(d_model))
+        self.W_q, self.W_k, self.W_v = nn.Linear(d_model, dim_aggr), nn.Linear(d_model, dim_aggr), nn.Linear(d_model, dim_aggr)
+        self.W_o = nn.Linear(d_model, dim_aggr)
         self.dropout = nn.Dropout(p=attn_drop)
         
     def forward(self, x, mask=None):
-        # input x tensor shape is (batch_size, d_model, d_k/d_v)
-        Q, K, V = self.W_q(x), self.W_k(x), self.W_v(x)     # (b, d_model, dv)
+        # input x: (b, N, d_model)
+        Q, K, V = self.W_q(x), self.W_k(x), self.W_v(x)     # (b, N, d_aggr)
         
-        # scale score of Q, K
-        attn_score = torch.bmm(Q, K.transpose(1, 2)) / self.scaling_factor
+        # scale score of Q, K: (b, N, N)
+        alpha = torch.bmm(Q, K.transpose(1, 2)) / self.scale
         
         # masking(opt.)
         if mask is not None:
-            attn_score.masked_fill_(mask, -1e18)
-            
-        # softmax
-        attn_score = F.softmax(attn_score, -1)
-        attn_score = self.dropout(attn_score)
+            alpha.masked_fill_(mask, -1e18)
         
-        # score @ value
-        output = torch.bmm(attn_score, V)
+        # softmax
+        alpha = F.softmax(alpha, -1)
+        alpha = self.dropout(alpha)
+        
+        # alpha @ value: (b, N, d_aggr)
+        output = torch.bmm(alpha, V)
         
         return output
     

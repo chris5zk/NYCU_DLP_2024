@@ -12,13 +12,16 @@ from .Transformer import BidirectionalTransformer
 class MaskGit(nn.Module):
     def __init__(self, configs):
         super().__init__()
+        # model component
         self.vqgan = self.load_vqgan(configs['VQ_Configs'])
+        self.transformer = BidirectionalTransformer(configs['Transformer_param'])
     
+        # masking setting
         self.num_image_tokens = configs['num_image_tokens']
         self.mask_token_id = configs['num_codebook_vectors']
         self.choice_temperature = configs['choice_temperature']
         self.gamma = self.gamma_func(configs['gamma_type'])
-        self.transformer = BidirectionalTransformer(configs['Transformer_param'])
+        
 
     def load_transformer_checkpoint(self, load_ckpt_path):
         self.transformer.load_state_dict(torch.load(load_ckpt_path))
@@ -27,7 +30,7 @@ class MaskGit(nn.Module):
     def load_vqgan(configs):
         cfg = yaml.safe_load(open(configs['VQ_config_path'], 'r'))
         model = VQGAN(cfg['model_param'])
-        model.load_state_dict(torch.load(configs['VQ_CKPT_path']), strict=True) 
+        model.load_state_dict(torch.load(configs['VQ_CKPT_path'])) 
         model = model.eval()
         return model
     
@@ -69,44 +72,50 @@ class MaskGit(nn.Module):
         z_indices = self.encode_to_z(x)         # ground truth
         
         # masking
-        # sos_tokens = torch.ones(x.shape[0], 1, dtype=torch.long, device=z_indices.device) * self.sos_token
-        
         r = math.floor(self.gamma(np.random.uniform()) * z_indices.shape[1])
         sample = torch.rand(z_indices.shape, device=z_indices.device).topk(r, dim=1).indices
+        
         mask = torch.zeros(z_indices.shape, dtype=torch.bool, device=z_indices.device)
         mask.scatter_(dim=1, index=sample, value=True)
         masked_indices = self.mask_token_id * torch.ones_like(z_indices, device=z_indices.device)
         
         a_indices = mask * z_indices + (~mask) * masked_indices
-        # a_indices = torch.cat((sos_tokens, a_indices), dim=1)
-        # target = torch.cat((sos_tokens, z_indices), dim=1)
-        
         logits = self.transformer(a_indices)    # transformer predict the probability of tokens
         
         return logits, z_indices
     
-    ##TODO3 step1-1: define one iteration decoding   
+    ## TODO3 step1-1: define one iteration decoding   
     @torch.no_grad()
-    def inpainting(self):
-        raise Exception('TODO3 step1-1!')
-        logits = self.transformer(None)
-        #Apply softmax to convert logits into a probability distribution across the last dimension.
-        logits = None
+    def inpainting(self, z, mask, ratio, N, gamma):
+        # Probability distribution across the last dimension
+        logits = self.transformer(z)                            # (batch_size, token_num, codebook_dims) -> (1, 256, 1025)
+        logits = torch.nn.functional.softmax(logits, dim=-1)    # (1, 256, 1025)
 
-        #FIND MAX probability for each token value
-        z_indices_predict_prob, z_indices_predict = None
+        # FIND MAX probability for each token value
+        z_indices_predict_prob, z_indices_predict = torch.max(logits, dim=-1)   # (1, 256), (1, 256)
 
-        ratio=None 
-        #predicted probabilities add temperature annealing gumbel noise as confidence
-        g = None  # gumbel noise
+        # predicted probabilities add temperature annealing gumbel noise as confidence
+        size = torch.rand(z_indices_predict_prob.shape[-1])
+        g = torch.distributions.Gumbel(size, size).sample().to('cuda:0')  # gumbel noise
+
         temperature = self.choice_temperature * (1 - ratio)
         confidence = z_indices_predict_prob + temperature * g
         
-        #hint: If mask is False, the probability should be set to infinity, so that the tokens are not affected by the transformer's prediction
-        #sort the confidence for the rank 
-        #define how much the iteration remain predicted tokens by mask scheduling
-        #At the end of the decoding process, add back the original token values that were not masked to the predicted tokens
-        mask_bc=None
+        # hint: If mask is False, the probability should be set to infinity,
+        # so that the tokens are not affected by the transformer's prediction
+        # mask_indices = mask.nonzero()
+        # confidence[mask_indices] = 1000
+        print(confidence)
+        print(confidence.shape, mask.shape)
+        
+        # sort the confidence for the rank
+        confidence = torch.sort(confidence)
+        # define how much the iteration remain predicted tokens by mask scheduling
+        n = self.gamma_func(mode=gamma)(ratio) * N
+        
+        
+        # At the end of the decoding process, add back the original token values that were not masked to the predicted tokens
+        mask_bc = None
         return z_indices_predict, mask_bc
     
 __MODEL_TYPE__ = {

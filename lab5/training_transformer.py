@@ -139,14 +139,17 @@ def main(args):
     train_loss_total, val_loss_total = [], []
     for epoch in range(args.start_from_epoch+1, args.epochs+1):
         # training stage
+        train_transformer.model.train()
         train_loss = train_transformer.train_one_epoch(args, epoch, train_loader, criterion)
         train_loss_total.append(train_loss)
         avg_train_loss = sum(train_loss_total)/len(train_loss_total)
         
         # validate stage
-        val_loss = train_transformer.eval_one_epoch(args, epoch, val_loader, criterion)
-        val_loss_total.append(val_loss)
-        avg_val_loss = sum(val_loss_total)/len(val_loss_total)
+        train_transformer.model.eval()
+        with torch.no_grad():
+            val_loss = train_transformer.eval_one_epoch(args, epoch, val_loader, criterion)
+            val_loss_total.append(val_loss)
+            avg_val_loss = sum(val_loss_total)/len(val_loss_total)
 
         print(f'> Training Loss - {train_loss:.3f}, Training Avg. - {avg_train_loss:.3f}, Validation Loss - {val_loss:.3f}, Validation Avg. {avg_val_loss:.3f}') 
 
@@ -184,9 +187,9 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint_path', type=str, default='./checkpoints/last_ckpt.pt', help='Path to checkpoint.')
     
     parser.add_argument('--device', type=str, default="cuda:0", help='Which device the training is on.')
-    parser.add_argument('--num_workers', type=int, default=12, help='Number of worker')
-    parser.add_argument('--train_batch_size', type=str, default=16, help='Batch size for training.')
-    parser.add_argument('--val_batch_size', type=int, default=8, help='Batch size for validation.')
+    parser.add_argument('--num_workers', type=int, default=8, help='Number of worker')
+    parser.add_argument('--train_batch_size', type=str, default=32, help='Batch size for training.')
+    parser.add_argument('--val_batch_size', type=int, default=32, help='Batch size for validation.')
     parser.add_argument('--partial', type=float, default=1.0, help='Dataset splitten')
     parser.add_argument('--accum_grad', type=int, default=10, help='Number for gradient accumulation.')
 
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_save_per_epoch', type=int, default=10, help='Save CKPT per ** epochs(defcault: 1)')
     parser.add_argument('--start_from_epoch', type=int, default=0, help='Number of epochs to train.')
     parser.add_argument('--ckpt_interval', type=int, default=0, help='Number of epochs to train.')
-    parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate.')
+    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate.')
 
     parser.add_argument('--MaskGitConfig', type=str, default='config/MaskGit.yml', help='Configurations for TransformerVQGAN')
     args = parser.parse_args()
