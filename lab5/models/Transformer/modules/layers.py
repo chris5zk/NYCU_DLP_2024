@@ -26,29 +26,27 @@ class MultiHeadAttention(nn.Module):
 class scaled_dot_product_attention(nn.Module):
     def __init__(self, d_model, d_head, num_heads, attn_drop) -> None:
         super().__init__()
-        dim_aggr = d_head * num_heads
-        self.scale = torch.sqrt(torch.tensor(d_model))
-        self.W_q, self.W_k, self.W_v = nn.Linear(d_model, dim_aggr), nn.Linear(d_model, dim_aggr), nn.Linear(d_model, dim_aggr)
-        self.W_o = nn.Linear(d_model, dim_aggr)
+        self.d_model, self.d_head, self.num_heads = d_model, d_head, num_heads
+        self.W_qkv = nn.Linear(d_model, 3*d_model)
+        self.W_o = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=attn_drop)
         
     def forward(self, x, mask=None):
-        # input x: (b, N, d_model)
-        Q, K, V = self.W_q(x), self.W_k(x), self.W_v(x)     # (b, N, d_aggr)
+        b, n, _ = x.size()
         
-        # scale score of Q, K: (b, N, N)
-        alpha = torch.bmm(Q, K.transpose(1, 2)) / self.scale
+        qkv = self.W_qkv(x)
+        qkv = qkv.reshape(b, n, self.num_heads, 3*self.d_head).permute(0, 2, 1, 3)  # (b, n, num_h, 3*dims) -> (b, num_h, n, 3*dims)
+        q, k, v = qkv.chunk(3, dim=-1)  # (b, num_h, n, dim) x3
         
-        # masking(opt.)
+        alpha = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_head)
         if mask is not None:
             alpha.masked_fill_(mask, -1e18)
-        
-        # softmax
         alpha = F.softmax(alpha, -1)
         alpha = self.dropout(alpha)
         
-        # alpha @ value: (b, N, d_aggr)
-        output = torch.bmm(alpha, V)
+        output = torch.matmul(alpha, v)
+        output = output.permute(0, 2, 1, 3)     # (b, n, h, dims)
+        output = output.reshape(b, n, self.d_model)
         
         return output
     
