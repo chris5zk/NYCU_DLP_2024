@@ -104,21 +104,17 @@ class MaskGit(nn.Module):
 
         # predicted probabilities add temperature annealing gumbel noise as confidence
         g = torch.distributions.Gumbel(0, 1).sample(sample_shape=z_indices_predict_prob.shape).to(z_indices_predict_prob.device)        # gumbel noise
-
         temperature = self.choice_temperature * (1 - ratio)
         confidence = z_indices_predict_prob + temperature * g                   # (1, 256)
         
-        # hint: If mask is False, the probability should be set to infinity,
-        # so that the tokens are not affected by the transformer's prediction
-        n = torch.ceil(self.gamma_func(mode=gamma)(ratio)*N).int()
+        # set where mask=false to inf to preserve non-masking places
         confidence[~mask] = torch.inf
+        n = torch.ceil(self.gamma_func(mode=gamma)(ratio)*N).int()
         buttomK_value = confidence.topk(n, dim=-1, largest=False).values[0, -1]
-
-        # define how much the iteration remain predicted tokens by mask scheduling
-        # At the end of the decoding process, add back the original token values that were not masked to the predicted tokens
         mask_bc = confidence <= buttomK_value
+        
         z_indices_predict = mask * (z_indices_predict) + (~mask) * z_indices
-    
+        
         return z_indices_predict, mask_bc
     
     
