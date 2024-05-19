@@ -25,8 +25,8 @@ class MaskGIT:
         self.mask_func = args.mask_func
         self.sweet_spot = args.sweet_spot
         self.device = args.device
-        self.prepare(args.output)
-        self.args = args
+        self.output_path = args.output + '/' + args.mask_func + '/' + f't={args.sweet_spot},T={args.total_iter}'
+        self.prepare(self.output_path)
         
     @staticmethod
     def prepare(root):
@@ -83,11 +83,11 @@ class MaskGIT:
                 imga[step+1] = dec_img_ori                          # get decoded image
 
             ## decoded image of the sweet spot only, the test_results folder path will be the --predicted-path for fid score calculation
-            vutils.save_image(dec_img_ori, os.path.join(self.args.output + '/' + "test_results", f"image_{i:03d}.png"), nrow=1) 
+            vutils.save_image(dec_img_ori, os.path.join(self.output_path + '/' + "test_results", f"image_{i:03d}.png"), nrow=1) 
 
             # demo score 
-            vutils.save_image(maska, os.path.join(self.args.output + '/' + "mask_scheduling", f"test_{i}.png"), nrow=10) 
-            vutils.save_image(imga, os.path.join(self.args.output + '/' + "imga", f"test_{i}.png"), nrow=7)
+            vutils.save_image(maska, os.path.join(self.output_path + '/' + "mask_scheduling", f"test_{i}.png"), nrow=10) 
+            vutils.save_image(imga, os.path.join(self.output_path + '/' + "imga", f"test_{i}.png"), nrow=7)
 
 
 class MaskedImage:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="MaskGIT for Inpainting")
     parser.add_argument('--device', type=str, default="cuda:0", help='Which device the training is on.')
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for testing.')
-    parser.add_argument('--partial', type=float, default=1.0, help='Number of epochs to train (default: 50)')    
+    parser.add_argument('--partial', type=float, default=1.0, help='Number of epochs to train (default: 50)')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of worker')
     
     parser.add_argument('--MaskGitConfig', type=str, default='config/MaskGit.yml', help='Configurations for MaskGIT')
@@ -152,9 +152,11 @@ if __name__ == '__main__':
     # MVTM parameter
     parser.add_argument('--sweet-spot', type=int, default=20, help='sweet spot: the best step in total iteration')
     parser.add_argument('--total-iter', type=int, default=20, help='total step for mask scheduling')
-    parser.add_argument('--mask-func', type=str, default='cosine', help='mask scheduling function')
+    parser.add_argument('--mask-func', type=str, default='linear', help='mask scheduling function')
 
     parser.add_argument('--output', type=str, default='./results', help='results path')
 
     args = parser.parse_args()
     main(args)
+    
+    

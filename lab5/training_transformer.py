@@ -188,8 +188,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--device', type=str, default="cuda:1", help='Which device the training is on.')
     parser.add_argument('--num_workers', type=int, default=8, help='Number of worker')
-    parser.add_argument('--train_batch_size', type=str, default=32, help='Batch size for training.')
-    parser.add_argument('--val_batch_size', type=int, default=32, help='Batch size for validation.')
+    parser.add_argument('--train_batch_size', type=str, default=24, help='Batch size for training.')
+    parser.add_argument('--val_batch_size', type=int, default=24, help='Batch size for validation.')
     parser.add_argument('--partial', type=float, default=1.0, help='Dataset splitten')
     parser.add_argument('--accum_grad', type=int, default=10, help='Number for gradient accumulation.')
 
