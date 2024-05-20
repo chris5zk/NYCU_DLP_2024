@@ -1,12 +1,24 @@
-# DKP Lab5 - MaskGIT for Image Inpainting
+# DLP Lab5 - MaskGIT for Image Inpainting
 
 ---
 
 ## Introduction
 
-### Quantilize features
+MaskGIT 是 VQGAN 與 VQVAE 技術的續作，利用 Vector quantization 與 Masked Token 的技巧訓練生成式模型。因此以下會簡單介紹 VQVAE, VQGAN 的技巧：
 
-### MaskGIT
+### VQVAE: Vector Quantization
+
+在 VAE Encoder 中是學習訓練資料特徵的機率分布得到平均與標準差，而 VAE Decoder 會從特徵機率分布中隨機採樣點進行圖片生成，這種從機率分布中採樣出離散點的過程，VQVAE 的作者認為或許可以直接在 latent space 學習出離散分布取代隨機採樣離散點的方法。
+
+作者在 latent space 中建立 codebook 儲存離散分布的 latent vector，在 Encode 後得到的連續分布 latent vector 與離散分布中的 latent vector 計算最短距離，將其轉為離散形式的特徵分布表示，最後再送進 Decoder 解碼出正確的預測值。
+
+### VQGAN: Autoregression
+
+VQGAN 則是在 Loss function 上加入對抗損失以及把原本的 MSE Loss 改為 Perceptual Loss，讓模型學得更好，除此之外也引入 Autoregressive model: Transformer，作為第二階段的訓練，這個想法是引用 NLP 領域補齊 masked token 的方法，這邊則是把 visual data 視為 visual token 進行預測。
+
+### MaskGIT: Bidirectional Encoder Representations from Transformers
+
+MaskGIT 進一步改善 VQGAN 的 performance，將 Autoregressive model 換成 BERT，並且引入 Masked Visual Token Modeling 的訓練技巧，使用 gamma function 對 token 進行遮掩，模擬任何可能發生的遮蔽情況，並且在 inferance stage 我們能一步一步的對模型進行 decoding，根據 masking schedule 慢慢的減少遮蔽的 token，逐步產出生成圖像。
 
 ---
 
@@ -90,8 +102,14 @@ MaskGIT 在訓練 BERT 時會隨機取樣需要被 mask 的 pixel，我是讓模
 | t=20, T=20 | ![alt text](./att/cos_20-20_m.png) | ![alt text](./att/lin_20-20_m.png) | ![alt text](./att/squ_20-20_m.png) |
 | t=30, T=30 | ![alt text](./att/cos_30-30_m.png) | ![alt text](./att/lin_30-30_m.png) | ![alt text](./att/squ_30-30_m.png) |
 
-#### Fid with different parameters
-
 ## Discussion
 
-### some founded
+### fid curve with different parameters
+
+根據 MaskGIT 原始論文提出的實驗成果，指出 Iteration step (T) 在 7 ~ 8 之間有最低的 FiD score，之後會以接近線性的趨勢上升，因此在我的實驗中，我畫出 `gamma_func=cosine, linear, square` 的 FiD 趨勢圖，分別在 Iteration step 為 `t, T = 10/20/30` 時的 FiD score
+
+與論文實驗相比，可以發現兩者有相同的趨勢，當 Iteration step 越高，FiD score 也越高。在我的觀點，我認為這是因為迭代的次數越多，相等於 gamma curve 上平均採樣越多的點，而採樣越多的點代表分布在 gamma curve 上 value 越低的採樣點越多，這代表保留的 masked token 數量越來越少，也意指我們能夠容忍信心程度越來越低的 token，因此隨著信心程度低的 token 增加，當然 FiD score 就會有往上的趨勢。
+
+|           Gamma function curve          |              FiD curve             |
+|   :---------------------------------:   |   :----------------------------:   |
+| ![alt text](./att/gamma_func_curve.png) | ![alt text](./att/fid_compare.png) |
