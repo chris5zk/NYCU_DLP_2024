@@ -143,7 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--MaskGitConfig', type=str, default='config/MaskGit.yml', help='Configurations for MaskGIT')
     
 #TODO3 step1-2: modify the path, MVTM parameters
-    parser.add_argument('--load-transformer-ckpt-path', type=str, default='./output/cosine/transformer_weights/epoch=100.pt', help='load ckpt')
+    parser.add_argument('--load-transformer-ckpt-path', type=str, default='./output/transformer_weights/epoch=60.pt', help='load ckpt')
     
     # dataset path
     parser.add_argument('--test-maskedimage-path', type=str, default='./dataset/cat_face/masked_image', help='Path to testing image dataset.')
