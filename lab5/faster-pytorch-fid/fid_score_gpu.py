@@ -376,7 +376,7 @@ parser.add_argument('--dims', type=int, default=2048,
 parser.add_argument('--save-stats', action='store_true',
                     help=('Generate an npz archive from a directory of samples. '
                           'The first path is used as input and the second as output.'))
-parser.add_argument('--predicted-path', type=str, default="./resluts/cosine/t=10,T=10/test_results")
+parser.add_argument('--predicted-path', type=str, default="./results/cosine/t=10,T=10/test_results")
 
 parser.add_argument('--gtcsv-path', type=str, default="./faster-pytorch-fid/test_gt.csv")
 
