@@ -47,6 +47,7 @@ class evaluation_model():
         self.resnet18 = self.resnet18.cuda()
         self.resnet18.eval()
         self.classnum = 24
+        
     def compute_acc(self, out, onehot_labels):
         batch_size = out.size(0)
         acc = 0
@@ -60,6 +61,7 @@ class evaluation_model():
                 if j in li:
                     acc += 1
         return acc / total
+    
     def eval(self, images, labels):
         with torch.no_grad():
             #your image shape should be (batch, 3, 64, 64)

@@ -23,6 +23,6 @@ For example:
 ['blue cube'],
 ['blue cube', 'green cube'], ...]
 
-4. evlauator.py, checkpoint.pth
+4. evaluator.py, checkpoint.pth
 Here are the pretrained classifier model's script and its weight for evaluating your synthetic images.
 More detail can be found in the script file.
