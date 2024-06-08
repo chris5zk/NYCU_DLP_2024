@@ -13,18 +13,25 @@ from torchvision.utils import save_image
 from utils import tqdm_bar, plot_curve
 from data import ICLEVR_Dataset
 from evaluator import evaluation_model
-from model.gan import Generator, Discriminator
+from model.dcgan import Generator, Discriminator
 
-GPUS='0,1'
-CUDA_VISIBLE_DEVICES=GPUS
-ngpu=2
 
+CUDA_VISIBLE_DEVICES='0'
+
+# custom weights initialization called on Generator and Discriminator
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight, 1.0, 0.02)
+        nn.init.zeros_(m.bias)
 
 def main(args):
     # params.
     device = args.device
-    ckpt_save_path = f'./{args.output_ckpt}/gan'
-    output_path = f'./{args.output}/gan'
+    ckpt_save_path = args.output_ckpt +'/' + 'gan'
+    output_path = args.output + '/' + 'gan'
     os.makedirs(ckpt_save_path, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
     
@@ -46,12 +53,15 @@ def main(args):
     if args.use_ckpt:
         netG.load_state_dict(torch.load(args.ckpt_path))
         netD.load_state_dict(torch.load(args.ckpt_path))
+    else:
+        netG.apply(weights_init)
+        netD.apply(weights_init)
     
     # loss
     criterion = nn.BCELoss()
     optimizerD = optim.Adam(netD.parameters(), lr=args.lr, betas=(0.9, 0.999))
     optimizerG = optim.Adam(netG.parameters(), lr=args.lr, betas=(0.9, 0.999))
-    evaluator = evaluation_model()
+    evaluator = evaluation_model(device)
     
     # training loop
     train(args, netG, netD, optimizerG, optimizerD, criterion, evaluator, train_dataloader, test_dataloader, new_test_dataloader, device, ckpt_save_path, output_path)
@@ -67,35 +77,41 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
         netG.train()
         loss_d_epoch, loss_g_epoch = 0.0, 0.0
         
-        for x, y in (pbar := tqdm(train_dataloader)):
-            batch_size = x.size(0)
-            real_x = x.to(device)
-            condition = y.to(device)
+        for image, cond in (pbar := tqdm(train_dataloader)):
+            optimD.zero_grad()
+            optimG.zero_grad()
+            
+            batch_size = image.size(0)
+            cond = cond.to(device)
             
             ############################
             # (1) Update Discriminator: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
-            real_y = ((1.0 - 0.7) * torch.rand(batch_size) + 0.7).to(device)
+            
             fake_y = ((0.3 - 0.0) * torch.rand(batch_size) + 0.0).to(device)
             if random.random() < 0.1:
                 real_y, fake_y = fake_y, real_y
                 
             # train with real
-            output = netD(real_x, condition)
+            real_image = image.to(device)
+            real_y = ((1.0 - 0.7) * torch.rand(batch_size) + 0.7).to(device)
+            
+            # train with fake
+            
+            
+            output = netD(real_image, cond)
             D_x = output.mean().item()
             loss_D_real = criterion(output, real_y)
             
             # train with fake
             noise = torch.randn(batch_size, args.Z_dims, 1, 1, device=device)
-            fake_x = netG(noise, condition)
-            output = netD(fake_x.detach(), condition)
+            fake_x = netG(noise, cond)
+            output = netD(fake_x.detach(), cond)
             D_G_z1 = output.mean().item()
             loss_D_fake = criterion(output, fake_y)
             
             # total loss
             loss_D = loss_D_real + loss_D_fake
-
-            optimD.zero_grad()
             loss_D.backward()
             optimD.step()
             
@@ -103,12 +119,10 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             # (2) Update Generator: maximize log(D(G(z)))
             ########################### 
             generator_label = torch.ones(batch_size).to(device)  # fake labels are real for generator cost
-            output = netD(fake_x.detach(), condition)
+            output = netD(fake_x.detach(), cond)
             D_G_z2 = output.mean().item()
             
             loss_G = criterion(output, generator_label)
-
-            optimG.zero_grad()
             loss_G.backward()
             optimG.step()
             
@@ -145,7 +159,7 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             # save acc. plot
             title, curve1, curve2 = f'Train_Epoch_{epoch}_Acc', 'test set', 'new test set'
             file_path = output_iter_path + '/' + 'Accuracy.png'
-            plot_curve(title, epoch, acc_list, new_acc_list, curve1, curve2, file_path, loc='lower right')
+            plot_curve(title, epoch // args.ckpt_save, acc_list, new_acc_list, curve1, curve2, file_path, loc='lower right')
             
             
             if acc > best_acc:
@@ -157,7 +171,7 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
                 print(f'> Save weight at {output_path}/netD_best.pth')
             
             if new_acc > new_best_acc:
-                new_best_acc = acc
+                new_best_acc = new_acc
                 torch.save(netG.state_dict(), f'{output_path}/netG_new_best.pth')
                 torch.save(netD.state_dict(), f'{output_path}/netD_new_best.pth')
                 print(f'New Best Acc: {new_best_acc}')
@@ -186,7 +200,7 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             torch.save(netD.state_dict(), f'{output_iter_path}/netD_Epoch_{epoch}.pth')
             print(f'> Save weight at {output_iter_path}/netG_Epoch_{epoch}.pth')
             print(f'> Save weight at {output_iter_path}/netD_Epoch_{epoch}.pth')
-                
+    
 
 def valid(args, netG, netD, evaluator, test_dataloader, new_test_dataloader, best_acc, new_best_acc, device, output_path, output_iter_path):
     netG.eval()

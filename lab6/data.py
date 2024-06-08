@@ -91,6 +91,7 @@ if __name__ == '__main__':
     
     print(len(dataset))
     print(len(dataloader))
-    # for data in tqdm(dataloader):
-    #     print(data)
-    #     break
+    for data in tqdm(dataloader):
+        print(data[0].shape)
+        print(data[1].shape)
+        break
