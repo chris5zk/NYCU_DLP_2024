@@ -16,27 +16,16 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 
 
-# custom weights initialization called on ``netG`` and ``netD``
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
-        nn.init.normal_(m.weight.data, 1.0, 0.02)
-        nn.init.constant_(m.bias.data, 0)
-        
-        
 class Generator(nn.Module):
-    def __init__(self, ngpu, nz=100, ngf=64, nc=3, n_classes=24):
+    def __init__(self, nz=100, ngf=64, nc=3, n_classes=24):
         super(Generator, self).__init__()
-        self.ngpu = ngpu
-        self.conds_emb = nn.Sequential(
+        self.cond_emb = nn.Sequential(
             nn.Linear(n_classes, nc),
             nn.LeakyReLU(0.2, True)
         )
         self.main = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(nz+nc, ngf * 8, kernel_size=4, stride=1, padding=0, bias=False),
+            nn.ConvTranspose2d(nz + nc, ngf * 8, kernel_size=4, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             nn.ReLU(True),
             # state size. ``(ngf*8) x 4 x 4``
@@ -57,24 +46,22 @@ class Generator(nn.Module):
             # state size. ``(nc) x 64 x 64``
         )
 
-    def forward(self, noise, conds):
-        conds_emb = self.conds_emb(conds).view(-1, 3, 1, 1)
-        gen_input = torch.cat((conds_emb, noise), 1)
-        out = self.main(gen_input)
+    def forward(self, noise, cond):
+        cond = self.cond_emb(cond).view(-1, 3, 1, 1)
+        out = self.main(torch.cat((noise, cond), 1))
         return out
 
 
 class Discriminator(nn.Module):
-    def __init__(self, ngpu, nz=100, ndf=64, nc=4, n_classes=24, img_size=64):
+    def __init__(self, n_classes=24, ndf=64, nc=3, img_size=64):
         super(Discriminator, self).__init__()
-        self.ngpu = ngpu
-        self.conds_emb = nn.Sequential(
+        self.cond_emb = nn.Sequential(
             nn.Linear(n_classes, img_size * img_size),
             nn.LeakyReLU(0.2, True)
         )
         self.main = nn.Sequential(
             # input is ``(nc) x 64 x 64``
-            nn.Conv2d(nc, ndf, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.Conv2d(nc + 1, ndf, kernel_size=4, stride=2, padding=1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. ``(ndf) x 32 x 32``
             nn.Conv2d(ndf, ndf * 2, kernel_size=4, stride=2, padding=1, bias=False),
@@ -93,8 +80,7 @@ class Discriminator(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, img, conds):
-        conds_emb = self.conds_emb(conds).view(-1, 1, 64, 64)
-        dis_input = torch.cat((img, conds_emb), dim=1)  # (b, 3+1, img_h, img_w)
-        out = self.main(dis_input)
+    def forward(self, img, cond):
+        cond_emb = self.cond_emb(cond).view(-1, 1, 64, 64)
+        out = self.main(torch.cat((img, cond_emb), dim=1))
         return out.view(-1, 1).squeeze(1)

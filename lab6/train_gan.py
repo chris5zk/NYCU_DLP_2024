@@ -1,7 +1,7 @@
 # DCGAN
 import os
+import random
 import argparse
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 import torch
@@ -10,10 +10,10 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 
-from utils import tqdm_bar
+from utils import tqdm_bar, plot_curve
 from data import ICLEVR_Dataset
 from evaluator import evaluation_model
-from model.gan import Generator, Discriminator, weights_init
+from model.gan import Generator, Discriminator
 
 GPUS='0,1'
 CUDA_VISIBLE_DEVICES=GPUS
@@ -23,34 +23,29 @@ ngpu=2
 def main(args):
     # params.
     device = args.device
-    ckpt_save_path = './checkpoint/gan'
-    output_path = './output/gan'
+    ckpt_save_path = f'./{args.output_ckpt}/gan'
+    output_path = f'./{args.output}/gan'
     os.makedirs(ckpt_save_path, exist_ok=True)
     os.makedirs(output_path, exist_ok=True)
     
     # dataset
-    train_dataset = ICLEVR_Dataset(args.tr_dir, args.tr_json, args.obj_json, args.test_json)
+    train_dataset = ICLEVR_Dataset(args.root)
     train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=True)
-    test_dataset = ICLEVR_Dataset(args.tr_dir, args.tr_json, args.obj_json, args.test_json, mode='test')
+    
+    test_dataset = ICLEVR_Dataset(args.root, test_file=args.test_file, mode='test')
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
-    new_test_dataset = ICLEVR_Dataset(args.tr_dir, args.tr_json, args.obj_json, args.new_test_json, mode='test')
+    
+    new_test_dataset = ICLEVR_Dataset(args.root, test_file=args.new_test_file, mode='test')
     new_test_dataloader = DataLoader(new_test_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
     
     # model
-    netG = Generator(ngpu).to(device)
-    netD = Discriminator(ngpu).to(device)
-    
-    if (device == 'cuda') and (ngpu > 1):
-        netG = nn.DataParallel(netG, list(range(ngpu)))
-        netD = nn.DataParallel(netD, list(range(ngpu)))
+    netG = Generator(nz=args.Z_dims, ngf=args.G_dims).to(device)
+    netD = Discriminator(ndf=args.D_dims).to(device)
     
     # checkpoints
     if args.use_ckpt:
         netG.load_state_dict(torch.load(args.ckpt_path))
         netD.load_state_dict(torch.load(args.ckpt_path))
-    else:
-        netG.apply(weights_init)
-        netD.apply(weights_init)
     
     # loss
     criterion = nn.BCELoss()
@@ -64,9 +59,10 @@ def main(args):
 
 def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataloader, test_dataloader, new_test_dataloader, device, ckpt_save_path, output_path):
     best_acc, new_best_acc = 0.0, 0.0
+    acc_list, new_acc_list = [], []
     loss_d_total, loss_g_total = [], []
     
-    for epoch in range(1, args.epochs):
+    for epoch in range(1, args.epochs+1):
         netD.train()
         netG.train()
         loss_d_epoch, loss_g_epoch = 0.0, 0.0
@@ -79,12 +75,14 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             ############################
             # (1) Update Discriminator: maximize log(D(x)) + log(1 - D(G(z)))
             ###########################
-            
+            real_y = ((1.0 - 0.7) * torch.rand(batch_size) + 0.7).to(device)
+            fake_y = ((0.3 - 0.0) * torch.rand(batch_size) + 0.0).to(device)
+            if random.random() < 0.1:
+                real_y, fake_y = fake_y, real_y
+                
             # train with real
             output = netD(real_x, condition)
             D_x = output.mean().item()
-            
-            real_y = ((1.0 - 0.7) * torch.rand(batch_size) + 0.7).to(device)
             loss_D_real = criterion(output, real_y)
             
             # train with fake
@@ -92,8 +90,6 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             fake_x = netG(noise, condition)
             output = netD(fake_x.detach(), condition)
             D_G_z1 = output.mean().item()
-            
-            fake_y = ((0.3 - 0.0) * torch.rand(batch_size) + 0.0).to(device)
             loss_D_fake = criterion(output, fake_y)
             
             # total loss
@@ -127,7 +123,7 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
         loss_d_total.append(loss_d_epoch)
         loss_g_total.append(loss_g_epoch)
         
-        if epoch % 20 == 0:
+        if epoch % args.ckpt_save == 0:
             output_iter_path = output_path + '/' + f'Epoch_{epoch}'
             os.makedirs(output_iter_path, exist_ok=True)
             # print performance
@@ -139,10 +135,34 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             # save loss plot
             title, curve1, curve2 = f'Train_Epoch_{epoch}_BCELoss', f'netD - avg. loss: {avg_loss_D:.3f}', f'netG - avg. loss: {avg_loss_G:.3f}'
             file_path = output_iter_path + '/' + 'Loss.png'
-            plot_loss(title, epoch, loss_d_total, loss_g_total, curve1, curve2, file_path)
+            plot_curve(title, epoch, loss_d_total, loss_g_total, curve1, curve2, file_path)
             
             # validation & save gen. images
-            best_acc, new_best_acc = valid(args, netG, netD, evaluator, test_dataloader, new_test_dataloader, best_acc, new_best_acc, device, output_path, output_iter_path)
+            acc, new_acc = valid(args, netG, netD, evaluator, test_dataloader, new_test_dataloader, best_acc, new_best_acc, device, output_path, output_iter_path)
+            acc_list.append(acc)
+            new_acc_list.append(new_acc)
+            
+            # save acc. plot
+            title, curve1, curve2 = f'Train_Epoch_{epoch}_Acc', 'test set', 'new test set'
+            file_path = output_iter_path + '/' + 'Accuracy.png'
+            plot_curve(title, epoch, acc_list, new_acc_list, curve1, curve2, file_path, loc='lower right')
+            
+            
+            if acc > best_acc:
+                best_acc = acc
+                torch.save(netG.state_dict(), f'{output_path}/netG_best.pth')
+                torch.save(netD.state_dict(), f'{output_path}/netD_best.pth')
+                print(f'Best Acc: {best_acc}')
+                print(f'> Save weight at {output_path}/netG_best.pth')
+                print(f'> Save weight at {output_path}/netD_best.pth')
+            
+            if new_acc > new_best_acc:
+                new_best_acc = acc
+                torch.save(netG.state_dict(), f'{output_path}/netG_new_best.pth')
+                torch.save(netD.state_dict(), f'{output_path}/netD_new_best.pth')
+                print(f'New Best Acc: {new_best_acc}')
+                print(f'> Save weight at {output_path}/netG_new_best.pth')
+                print(f'> Save weight at {output_path}/netD_new_best.pth')
             
             # save checkpoint
             save_G_model = ckpt_save_path + '/' + f'netG_Epoch_{epoch}.ckpt'
@@ -159,12 +179,11 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
             }, save_D_model)
             print(f'> Save checkpoint at {save_D_model}')
             
-            
-        if epoch % 100 == 0:
+        if epoch % args.pt_save == 0:
             # save weights
             output_iter_path = output_path + '/' + f'Epoch_{epoch}'
             torch.save(netG.state_dict(), f'{output_iter_path}/netG_Epoch_{epoch}.pth')
-            torch.save(netD.state_dict(), f'{output_iter_path}/netD_e{epoch}.pth')
+            torch.save(netD.state_dict(), f'{output_iter_path}/netD_Epoch_{epoch}.pth')
             print(f'> Save weight at {output_iter_path}/netG_Epoch_{epoch}.pth')
             print(f'> Save weight at {output_iter_path}/netD_Epoch_{epoch}.pth')
                 
@@ -173,85 +192,58 @@ def valid(args, netG, netD, evaluator, test_dataloader, new_test_dataloader, bes
     netG.eval()
     netD.eval()
     with torch.no_grad():
-        for idx, y in enumerate(test_dataloader):
+        for y in test_dataloader:
             condition = y.to(device)
             batch_size = y.shape[0]
             
             noise = torch.randn(batch_size, args.Z_dims, 1, 1, device=device)
             gen_image = netG(noise, condition)
-            save_image(gen_image.detach(), output_iter_path + '/' + f'test{idx}.png')
+            save_image(gen_image.detach(), output_iter_path + '/' + f'test.png')
             
             acc = evaluator.eval(gen_image, condition)
             print(f'Valid: test - Accuracy: {acc:.4f}')
-            
-            if acc > best_acc:
-                best_acc = acc
-                torch.save(netG.state_dict(), f'{output_path}/netG_best.pth')
-                torch.save(netD.state_dict(), f'{output_path}/netD_best.pth')
-                print(f'Best Acc: {best_acc}')
-                print(f'> Save weight at {output_path}/netG_best.pth')
-                print(f'> Save weight at {output_path}/netD_best.pth')
                 
-        for idx, y in enumerate(new_test_dataloader):
+        for y in new_test_dataloader:
             condition = y.to(device)
             batch_size = y.shape[0]
             
             noise = torch.randn(batch_size, args.Z_dims, 1, 1, device=device)
             gen_image = netG(noise, condition)
-            save_image(gen_image.detach(), output_iter_path + '/' + f'new_test{idx}.png')
+            save_image(gen_image.detach(), output_iter_path + '/' + f'new_test.png')
             
-            acc = evaluator.eval(gen_image, condition)
-            print(f'Valid: new test - Accuracy: {acc:.4f}')
-            
-            if acc > new_best_acc:
-                new_best_acc = acc
-                torch.save(netG.state_dict(), f'{output_path}/netG_new_best.pth')
-                torch.save(netD.state_dict(), f'{output_path}/netD_new_best.pth')
-                print(f'New Best Acc: {new_best_acc}')
-                print(f'> Save weight at {output_path}/netG_new_best.pth')
-                print(f'> Save weight at {output_path}/netD_new_best.pth')
-                
-    return best_acc, new_best_acc
+            new_acc = evaluator.eval(gen_image, condition)
+            print(f'Valid: new test - Accuracy: {new_acc:.4f}')
 
-
-def plot_loss(title, epoch, y1, y2, curve1, curve2, path):
-    x = range(0, epoch)
-    plt.title(title)
-    plt.plot(x, y1, 'b', label=curve1)
-    plt.plot(x, y2, 'r', label=curve2)
-    plt.legend(loc='lower right')
-    plt.savefig(path)
-    plt.clf()
+    return acc, new_acc
     
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Train")
     
     # dataset
-    parser.add_argument('--tr_dir', type=str, default='./dataset/iclevr', help='training data directory')
-    parser.add_argument('--tr_json', type=str, default='./dataset/train.json', help='training data file')
-    parser.add_argument('--obj_json', type=str, default='./dataset/objects.json', help='objects index')
-    parser.add_argument('--test_json', type=str, default='./dataset/test.json', help='testing data file')
-    parser.add_argument('--new_test_json', type=str, default='./dataset/new_test.json', help='new testing data file')
+    parser.add_argument('--root', type=str, default='./dataset', help='training data directory')
+    parser.add_argument('--test_file', type=str, default='test.json', help='testing data file')
+    parser.add_argument('--new_test_file', type=str, default='new_test.json', help='new testing data file')
     
     # model
     parser.add_argument('--Z_dims', type=int, default=100, help='latent dimension')
-    parser.add_argument('--G_dims', type=int, default=64, help='generator feature dimension')
-    parser.add_argument('--D_dims', type=int, default=64, help='discriminator feature dimension')
+    parser.add_argument('--G_dims', type=int, default=256, help='generator feature dimension')
+    parser.add_argument('--D_dims', type=int, default=256, help='discriminator feature dimension')
     
     # training hyperparam.
-    parser.add_argument('--device', type=str, default='cuda', help='device you choose to use')
+    parser.add_argument('--device', type=str, default='cuda:0', help='device you choose to use')
     parser.add_argument('--num_workers', '-nw',type=int, default=8, help='numbers of workers')
-    parser.add_argument('--batch_size', '-b', type=int, default=2048, help='batch size of data')
-    parser.add_argument('--epochs', '-e', type=int, default=500, help='maximum epoch to train')
+    parser.add_argument('--batch_size', '-b', type=int, default=128, help='batch size of data')
+    parser.add_argument('--epochs', '-e', type=int, default=200, help='maximum epoch to train')
     parser.add_argument('--lr', type=int, default=1e-4, help='learning rate')
     parser.add_argument('--use_ckpt', action='store_true', help='use checkpoint for training')
     parser.add_argument('--ckpt_path', type=str, default='./checkpoint/epoch=20.ckpt')
     
     # saving param.
-    parser.add_argument('--pt_save', type=int, default=10, help='model weight saving interval')
-    parser.add_argument('--ckpt_save', type=int, default=5, help='checkpoint saving interval')
-    parser.add_argument('--output_root', type=str, default='./output', help='training results saving path')
+    parser.add_argument('--pt_save', type=int, default=20, help='model weight saving interval')
+    parser.add_argument('--ckpt_save', type=int, default=10, help='checkpoint saving interval')
+    parser.add_argument('--output', type=str, default='./output', help='training results saving path')
+    parser.add_argument('--output_ckpt', type=str, default='./checkpoint', help='training results saving path')
     
     args = parser.parse_args()
     
