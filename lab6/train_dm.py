@@ -92,11 +92,10 @@ def train(  args, device,
             # plot loss curve
             avg_loss = sum(loss_total)/len(loss_total)
             title, curve = f'Train_Epoch_{epoch}_MSELoss', f'DDPM - avg. loss={avg_loss:.3f}'
-            plot_curve( title, len(loss_total), loss_total, 
-                       curve, path=os.path.join(path, 'Loss.png'))
+            plot_curve( title, len(loss_total), loss_total, curve, path=os.path.join(path, 'Loss.png'))
             
             # validation - test file
-            acc, grid = valid(args, device, ddpm, evaluator, test_dataloader)
+            acc, grid = valid(ddpm, evaluator, test_dataloader, device)
             acc_list.append(acc)
             save_image(grid, os.path.join(path, 'test.png'))
             if acc > best_acc:
@@ -106,7 +105,7 @@ def train(  args, device,
                 print(f'> Save weight at {output_path}/ddpm_best.pth')
             
             # validation - new test file
-            acc, grid = valid(args, device, ddpm, evaluator, new_test_dataloader)
+            acc, grid = valid(ddpm, evaluator, new_test_dataloader, device)
             new_acc_list.append(acc)
             save_image(grid, os.path.join(path, 'new_test.png'))
             if acc > new_best_acc:
@@ -116,9 +115,8 @@ def train(  args, device,
                 print(f'> Save weight at {output_path}/ddpm_new_best.pth')
 
             # plot accuracy curve
-            title, curve1, curve2 = f'Train_Epoch_{epoch}_Accuracy', f'test set(Best={best_acc})', f'new test set(Best={new_best_acc})'
-            plot_curve( title, len(acc_list), acc_list, curve1, 
-                        new_acc_list, curve2, path=os.path.join(path, 'Accuracy.png'))
+            title, curve1, curve2 = f'Train_Epoch_{epoch}_Accuracy', f'test set(Best={best_acc:.3f})', f'new test set(Best={new_best_acc:.3f})'
+            plot_curve( title, len(acc_list), acc_list, curve1, new_acc_list, curve2, path=os.path.join(path, 'Accuracy.png'))
             
             # save checkpoint
             path = os.path.join(ckpt_save_path, f'ddpm_Epoch_{epoch}.ckpt')
@@ -132,18 +130,16 @@ def train(  args, device,
         if epoch % args.pt_save == 0:
             path = os.path.join(output_path, f'Epoch_{epoch}')
             torch.save(ddpm.state_dict(), f'{path}/ddpm_Epoch_{epoch}.pth')
-            print(f'> Save weight at {path}/ddpm_Epoch_{epoch}.pth')
+            print(f'> Save weight at', os.path.join(path, f'ddpm_Epoch_{epoch}.pth'))
         
         scheduler.step(best_acc+new_best_acc)
 
 
-def valid(args, device, ddpm, evaluator, test_dataloader):
-    
+def valid(ddpm, evaluator, test_dataloader, device):
         ddpm.eval()
         x_gen, label = [], []
-        
         with torch.no_grad():
-            for cond in test_dataloader:
+            for cond in tqdm(test_dataloader):
                 cond = cond.to(device)
                 x_i = ddpm.sample(cond, (3, 64, 64), device)
                 x_gen.append(x_i)

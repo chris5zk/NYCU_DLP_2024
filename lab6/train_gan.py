@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision.utils import save_image
+from torchvision.utils import save_image, make_grid
 
 from utils import tqdm_bar, plot_curve
 from data import ICLEVR_Dataset
@@ -51,9 +51,11 @@ def main(args):
     
     # checkpoints
     if args.use_ckpt:
+        print(f'Using checkpoint: {args.ckpt_path}')
         netG.load_state_dict(torch.load(args.ckpt_path))
         netD.load_state_dict(torch.load(args.ckpt_path))
     else:
+        print('Intialize the model weight.')
         netG.apply(weights_init)
         netD.apply(weights_init)
     
@@ -78,157 +80,155 @@ def train(args, netG, netD, optimG, optimD, criterion, evaluator, train_dataload
         loss_d_epoch, loss_g_epoch = 0.0, 0.0
         
         for image, cond in (pbar := tqdm(train_dataloader)):
-            optimD.zero_grad()
-            optimG.zero_grad()
-            
             batch_size = image.size(0)
             cond = cond.to(device)
             
-            ############################
-            # (1) Update Discriminator: maximize log(D(x)) + log(1 - D(G(z)))
-            ###########################
-            
-            fake_y = ((0.3 - 0.0) * torch.rand(batch_size) + 0.0).to(device)
-            if random.random() < 0.1:
-                real_y, fake_y = fake_y, real_y
-                
-            # train with real
+            # real image & label
             real_image = image.to(device)
-            real_y = ((1.0 - 0.7) * torch.rand(batch_size) + 0.7).to(device)
+            real_y = torch.ones(batch_size, dtype=torch.float32).to(device)
             
-            # train with fake
-            
-            
-            output = netD(real_image, cond)
-            D_x = output.mean().item()
-            loss_D_real = criterion(output, real_y)
-            
-            # train with fake
+            # fake image & label
             noise = torch.randn(batch_size, args.Z_dims, 1, 1, device=device)
-            fake_x = netG(noise, cond)
-            output = netD(fake_x.detach(), cond)
-            D_G_z1 = output.mean().item()
-            loss_D_fake = criterion(output, fake_y)
+            fake_image = netG(noise, cond).detach()
+            fake_y = torch.zeros(batch_size, dtype=torch.float32).to(device)
             
-            # total loss
-            loss_D = loss_D_real + loss_D_fake
-            loss_D.backward()
-            optimD.step()
+            if epoch % args.ratio == 0:
+                # Update Discriminator: maximize log(D(x)) + log(1 - D(G(z)))
+                optimD, loss_D = train_discriminator_one_epoch(netD, optimD, cond, real_image, real_y, fake_image, fake_y, criterion, device)
+                loss_d_epoch += loss_D.item()
+                desp = f'Train Discriminator - Epoch {epoch}/{args.epochs}, Loss_D: {loss_D.item():.4f}'
+                tqdm_bar(pbar, desp)
+            else:
+                # Update Generator: maximize log(D(G(z)))
+                optimG, loss_G = train_generator_one_epoch(netD, optimG, cond, fake_image, batch_size, criterion, device)
+                loss_g_epoch += loss_G.item()
+                desp = f'Train Generator - Epoch {epoch}/{args.epochs}, Loss_G: {loss_G.item():.4f}'
+                tqdm_bar(pbar, desp)
             
-            ############################
-            # (2) Update Generator: maximize log(D(G(z)))
-            ########################### 
-            generator_label = torch.ones(batch_size).to(device)  # fake labels are real for generator cost
-            output = netD(fake_x.detach(), cond)
-            D_G_z2 = output.mean().item()
-            
-            loss_G = criterion(output, generator_label)
-            loss_G.backward()
-            optimG.step()
-            
-            loss_d_epoch += loss_D.item()
-            loss_g_epoch += loss_G.item()
-            
-            desp = f'Train - Epoch {epoch}/{args.epochs}, Loss_G: {loss_G.item():.4f}, Loss_D: {loss_D.item():.4f}'
-            tqdm_bar(pbar, desp)
-        
-        loss_d_epoch /= len(train_dataloader)
-        loss_g_epoch /= len(train_dataloader)
-        loss_d_total.append(loss_d_epoch)
-        loss_g_total.append(loss_g_epoch)
-        
-        if epoch % args.ckpt_save == 0:
-            output_iter_path = output_path + '/' + f'Epoch_{epoch}'
-            os.makedirs(output_iter_path, exist_ok=True)
-            # print performance
-            avg_loss_G = sum(loss_g_total)/len(loss_g_total)
+        if epoch % args.ratio == 0:
+            loss_d_epoch /= len(train_dataloader)
+            loss_d_total.append(loss_d_epoch)
             avg_loss_D = sum(loss_d_total)/len(loss_d_total)
-            print('Train - Epoch %d/%d: Loss_G: %.4f(avg. %.4f), Loss_D: %.4f(avg. %.4f), D(x): %.4f, D(G(z)): %.4f / %.4f'
-                    % (epoch, args.epochs, loss_g_epoch, avg_loss_G, loss_d_epoch, avg_loss_D, D_x, D_G_z1, D_G_z2))
+        else:
+            loss_g_epoch /= len(train_dataloader)
+            loss_g_total.append(loss_g_epoch)
+            avg_loss_G = sum(loss_g_total)/len(loss_g_total)
+
+        if epoch % args.ckpt_save == 0:
+            path = os.path.join(output_path, f'Epoch_{epoch}')
+            os.makedirs(path, exist_ok=True)
+
+            # save discriminator loss curve
+            title, curve = f'Discriminator_Epoch_{epoch}_BCELoss', f'Discriminator - avg. loss={avg_loss_D:.3f}'
+            plot_curve(title, len(loss_d_total), loss_d_total, curve, path=os.path.join(path, 'D_Loss.png'))
             
-            # save loss plot
-            title, curve1, curve2 = f'Train_Epoch_{epoch}_BCELoss', f'netD - avg. loss: {avg_loss_D:.3f}', f'netG - avg. loss: {avg_loss_G:.3f}'
-            file_path = output_iter_path + '/' + 'Loss.png'
-            plot_curve(title, epoch, loss_d_total, loss_g_total, curve1, curve2, file_path)
+            # save generator loss curve
+            title, curve = f'Generator_Epoch_{epoch}_BCELoss', f'Generator - avg. loss={avg_loss_G:.3f}'
+            plot_curve(title, len(loss_g_total), loss_g_total, curve, path=os.path.join(path, 'G_Loss.png'))
             
-            # validation & save gen. images
-            acc, new_acc = valid(args, netG, netD, evaluator, test_dataloader, new_test_dataloader, best_acc, new_best_acc, device, output_path, output_iter_path)
+            # validation - test file
+            acc, grid = valid(args, netG, netD, evaluator, test_dataloader, device)
             acc_list.append(acc)
-            new_acc_list.append(new_acc)
-            
-            # save acc. plot
-            title, curve1, curve2 = f'Train_Epoch_{epoch}_Acc', 'test set', 'new test set'
-            file_path = output_iter_path + '/' + 'Accuracy.png'
-            plot_curve(title, epoch // args.ckpt_save, acc_list, new_acc_list, curve1, curve2, file_path, loc='lower right')
-            
-            
+            save_image(grid, os.path.join(path, 'test.png'))
             if acc > best_acc:
                 best_acc = acc
-                torch.save(netG.state_dict(), f'{output_path}/netG_best.pth')
-                torch.save(netD.state_dict(), f'{output_path}/netD_best.pth')
-                print(f'Best Acc: {best_acc}')
-                print(f'> Save weight at {output_path}/netG_best.pth')
-                print(f'> Save weight at {output_path}/netD_best.pth')
+                torch.save(netG.state_dict(), os.path.join(path, 'netG_best.pth'))
+                torch.save(netD.state_dict(), os.path.join(path, 'netD_best.pth'))
+                print(f'>>> Best Acc: {best_acc}')
+                print(f'> Save weight at', os.path.join(path, 'netG_best.pth'))
+                print(f'> Save weight at', os.path.join(path, 'netD_best.pth'))
             
-            if new_acc > new_best_acc:
-                new_best_acc = new_acc
-                torch.save(netG.state_dict(), f'{output_path}/netG_new_best.pth')
-                torch.save(netD.state_dict(), f'{output_path}/netD_new_best.pth')
-                print(f'New Best Acc: {new_best_acc}')
-                print(f'> Save weight at {output_path}/netG_new_best.pth')
-                print(f'> Save weight at {output_path}/netD_new_best.pth')
+            # validation - new test file
+            acc, grid = valid(args, netG, netD, evaluator, new_test_dataloader, device)
+            new_acc_list.append(acc)
+            save_image(grid, os.path.join(path, 'new_test.png'))
+            if acc > new_best_acc:
+                new_best_acc = acc
+                torch.save(netG.state_dict(), os.path.join(path, 'netG_new_best.pth'))
+                torch.save(netD.state_dict(), os.path.join(path, 'netD_new_best.pth'))
+                print(f'>>> New Best Acc: {new_best_acc}')
+                print(f'> Save weight at', os.path.join(path, 'netG_new_best.pth'))
+                print(f'> Save weight at', os.path.join(path, 'netD_new_best.pth'))
+            
+            # plot accuracy curve
+            title, curve1, curve2 = f'Train_Epoch_{epoch}_Acc', f'test set(Best={best_acc:.3f})', f'new test set(Best={new_best_acc:.3f})'
+            plot_curve(title, len(acc_list), acc_list, curve1, new_acc_list, curve2, os.path.join(path, 'Accuracy.png'), loc='lower right')
             
             # save checkpoint
-            save_G_model = ckpt_save_path + '/' + f'netG_Epoch_{epoch}.ckpt'
+            path = os.path.join(ckpt_save_path, f'netG_Epoch_{epoch}.ckpt')
             torch.save({
                 "netG":     netG.state_dict(),
                 "optimG" :  optimG.state_dict(),
-            }, save_G_model)
-            print(f'> Save checkpoint at {save_G_model}')
+            }, path)
+            print(f'> Save checkpoint at {path}')
             
-            save_D_model = ckpt_save_path + '/' + f'netD_Epoch_{epoch}.ckpt'
+            path = os.path.join(ckpt_save_path, f'netD_Epoch_{epoch}.ckpt')
             torch.save({
                 "netD":     netD.state_dict(),
                 "optimD" :  optimD.state_dict(),
-            }, save_D_model)
-            print(f'> Save checkpoint at {save_D_model}')
+            }, path)
+            print(f'> Save checkpoint at {path}')
             
         if epoch % args.pt_save == 0:
             # save weights
-            output_iter_path = output_path + '/' + f'Epoch_{epoch}'
-            torch.save(netG.state_dict(), f'{output_iter_path}/netG_Epoch_{epoch}.pth')
-            torch.save(netD.state_dict(), f'{output_iter_path}/netD_Epoch_{epoch}.pth')
-            print(f'> Save weight at {output_iter_path}/netG_Epoch_{epoch}.pth')
-            print(f'> Save weight at {output_iter_path}/netD_Epoch_{epoch}.pth')
+            path = os.path.join(output_path, f'Epoch_{epoch}')
+            torch.save(netG.state_dict(), os.path.join(path, f'netG_Epoch_{epoch}.pth'))
+            torch.save(netD.state_dict(), os.path.join(path, f'netD_Epoch_{epoch}.pth'))
+            print(f'> Save weight at', os.path.join(path, f'netG_Epoch_{epoch}.pth'))
+            print(f'> Save weight at', os.path.join(path, f'netD_Epoch_{epoch}.pth'))
     
 
-def valid(args, netG, netD, evaluator, test_dataloader, new_test_dataloader, best_acc, new_best_acc, device, output_path, output_iter_path):
+def train_discriminator_one_epoch(netD, optimD, cond, real_image, real_y, fake_image, fake_y, criterion, device):
+    optimD.zero_grad()
+    
+    # train with real
+    output = netD(real_image, cond)
+    loss_D_real = criterion(output, real_y)
+    
+    # train with fake
+    output = netD(fake_image, cond)
+    loss_D_fake = criterion(output, fake_y)
+    
+    # total loss
+    loss_D = loss_D_real + loss_D_fake
+    loss_D.backward()
+    optimD.step()
+    
+    return optimD, loss_D
+
+
+def train_generator_one_epoch(netD, optimG, cond, fake_image, batch_size, criterion, device):
+    optimG.zero_grad()
+    
+    generator_label = torch.ones(batch_size).to(device)  # fake labels are real for generator cost
+    output = netD(fake_image, cond)
+    
+    loss_G = criterion(output, generator_label)
+    loss_G.backward()
+    optimG.step()
+    
+    return optimG, loss_G
+
+
+def valid(args, netG, netD, evaluator, test_dataloader, device):
     netG.eval()
     netD.eval()
+    x_gen, label = [], []
+    
     with torch.no_grad():
-        for y in test_dataloader:
-            condition = y.to(device)
-            batch_size = y.shape[0]
-            
-            noise = torch.randn(batch_size, args.Z_dims, 1, 1, device=device)
-            gen_image = netG(noise, condition)
-            save_image(gen_image.detach(), output_iter_path + '/' + f'test.png')
-            
-            acc = evaluator.eval(gen_image, condition)
-            print(f'Valid: test - Accuracy: {acc:.4f}')
-                
-        for y in new_test_dataloader:
-            condition = y.to(device)
-            batch_size = y.shape[0]
-            
-            noise = torch.randn(batch_size, args.Z_dims, 1, 1, device=device)
-            gen_image = netG(noise, condition)
-            save_image(gen_image.detach(), output_iter_path + '/' + f'new_test.png')
-            
-            new_acc = evaluator.eval(gen_image, condition)
-            print(f'Valid: new test - Accuracy: {new_acc:.4f}')
+        for cond in test_dataloader:
+            cond = cond.to(device)
+            noise = torch.randn(cond.shape[0], args.Z_dims, 1, 1, device=device)
+            gen_image = netG(noise, cond)
+            x_gen.append(gen_image)
+            label.append(cond)
+        x_gen, label = torch.stack(x_gen, dim=0).squeeze(), torch.stack(label, dim=0).squeeze()
+        
+        acc = evaluator.eval(x_gen, label)
+        grid = make_grid(x_gen, nrow=8, normalize=True)
+        print(f'Valid - Accuracy: {acc:.4f}')
 
-    return acc, new_acc
+    return acc, grid
     
 
 if __name__ == '__main__':
@@ -243,6 +243,7 @@ if __name__ == '__main__':
     parser.add_argument('--Z_dims', type=int, default=100, help='latent dimension')
     parser.add_argument('--G_dims', type=int, default=256, help='generator feature dimension')
     parser.add_argument('--D_dims', type=int, default=256, help='discriminator feature dimension')
+    parser.add_argument('--ratio', type=int, default=3, help='update ratio, netG : netD')
     
     # training hyperparam.
     parser.add_argument('--device', type=str, default='cuda:0', help='device you choose to use')
