@@ -276,8 +276,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_class', type=int, default=24, help='numbers of class')
     parser.add_argument('--c_dims', type=int, default=100, help='condition dimension')
     parser.add_argument('--Z_dims', type=int, default=100, help='latent dimension')
-    parser.add_argument('--G_dims', type=int, default=300, help='generator feature dimension')
-    parser.add_argument('--D_dims', type=int, default=100, help='discriminator feature dimension')
+    parser.add_argument('--G_dims', type=int, default=64, help='generator feature dimension')
+    parser.add_argument('--D_dims', type=int, default=64, help='discriminator feature dimension')
     parser.add_argument('--ratio', type=int, default=1, help='update ratio, netD : netG')
     parser.add_argument('--aux_w', type=int, default=1, help='aux. loss weight')
     
@@ -291,8 +291,8 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_path', type=str, default='./checkpoint/epoch=20.ckpt')
     
     # saving param.
-    parser.add_argument('--pt_save', type=int, default=20, help='model weight saving interval')
-    parser.add_argument('--ckpt_save', type=int, default=10, help='checkpoint saving interval')
+    parser.add_argument('--pt_save', type=int, default=1, help='model weight saving interval')
+    parser.add_argument('--ckpt_save', type=int, default=1, help='checkpoint saving interval')
     parser.add_argument('--output', type=str, default='./output', help='training results saving path')
     parser.add_argument('--output_ckpt', type=str, default='./checkpoint', help='training results saving path')
     

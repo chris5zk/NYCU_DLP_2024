@@ -44,16 +44,20 @@ class DDPM(nn.Module):
         """sample initial noise and generate images based on conditions"""
         n_sample = len(cond)
         # x_T ~ N(0, 1), sample initial noise
+        x_step = []
         x_i = torch.randn(n_sample, *size).to(device)  
         for idx in tqdm(range(self.n_T, 0, -1), leave=False):
             timestep = torch.tensor([idx / self.n_T]).to(device)
             z = torch.randn(n_sample, *size).to(device) if idx > 1 else 0
             eps = self.unet_model(x_i, cond, timestep)
+            if idx % 30 == 0:
+                x_step.append(x_i[0])
             x_i = (
                 self.oneover_sqrta[idx] * (x_i - eps * self.mab_over_sqrtmab[idx])
                 + self.sqrt_beta_t[idx] * z
             )
-        return x_i
+        x_step.append(x_i[0])
+        return x_i, x_step
 
 
 

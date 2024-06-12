@@ -33,22 +33,27 @@ def main(args):
     acc = 0.0
     ddpm.load_state_dict(torch.load(args.weight_t))
     
-    # The sampling process is stochastic, with an accuracy range of 0.65 to 0.82.
+    # The sampling process is stochastic, with an accuracy range of 0.69 to 0.82.
     # It can't guarantee the accuracy always larger than 0.8
-    acc, grid = test(ddpm, evaluator, test_dataloader, device)
+    acc, grid, grid_step = test(ddpm, evaluator, test_dataloader, device)
     path = os.path.join(args.output_path, 'test.png')
     save_image(grid, path)
+    path = os.path.join(args.output_path, 'test_process.png')
+    save_image(grid_step, path)
     print(f'Test set accuracy={acc:.4f}')
     
     # new test set
     acc = 0.0
     ddpm.load_state_dict(torch.load(args.weight_nt))
     
-    # The sampling process is stochastic, with an accuracy range of 0.65 to 0.82.
+    # The sampling process is stochastic, with an accuracy range of 0.69 to 0.82.
     # It can't guarantee the accuracy always larger than 0.8
-    acc, grid = test(ddpm, evaluator, new_test_dataloader, device)
+    acc, grid, grid_step = test(ddpm, evaluator, new_test_dataloader, device)
     path = os.path.join(args.output_path, 'new_test.png')
     save_image(grid, path)
+    path = os.path.join(args.output_path, 'new_test_process.png')
+    save_image(grid_step, path)
+    
     print(f'New test set accuracy={acc:.4f}')
     
 
@@ -59,15 +64,17 @@ def test(ddpm, evaluator, test_dataloader, device):
     with torch.no_grad():
         for cond in test_dataloader:
             cond = cond.to(device)
-            x_i = ddpm.sample(cond, (3, 64, 64), device)
+            x_i, x_step = ddpm.sample(cond, (3, 64, 64), device)
             x_gen.append(x_i)
             label.append(cond)
         x_gen, label = torch.stack(x_gen, dim=0).squeeze(), torch.stack(label, dim=0).squeeze()
+        x_step = torch.stack(x_step, dim=0).squeeze()
         
         acc = evaluator.eval(x_gen, label)
         grid = make_grid(x_gen, nrow=8, normalize=True)
+        grid_step = make_grid(x_step, nrow=8, normalize=True, scale_each=True)
         
-    return acc, grid
+    return acc, grid, grid_step
 
 
 if __name__ == '__main__':
@@ -88,7 +95,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', '-b', type=int, default=32, help='batch size of data')
     
     # inference 
-    parser.add_argument('--weight_t', type=str, default='./output2/dm/ddpm_best.pth', help='test set model weight')
+    parser.add_argument('--weight_t', type=str, default='./output/dm/ddpm_best.pth', help='test set model weight')
     parser.add_argument('--weight_nt', type=str, default='./output/dm/ddpm_new_best.pth', help='new test model weight')
     parser.add_argument('--output_path', type=str, default='./results/dm', help='infernece results saving path')
     

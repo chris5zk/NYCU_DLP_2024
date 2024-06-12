@@ -127,7 +127,8 @@ def train(args, netG, netD, optimG, optimD, schedulerD, schedulerG, criterion, e
             # Update Generator: maximize log(D(G(z)))
             optimG, loss_G, D_G_z2 = train_generator_one_step(netD, optimG, cond, fake_image, batch_size, criterion, device)
             loss_g_epoch += loss_G.item()
-            desp = f'Train - Epoch {epoch}/{args.epochs} - lr: {schedulerG.get_last_lr()[0]}, Loss_G: {loss_G.item():.4f}, Loss_D: {step:.4f}, real: {real:.4f}, fake: {fake:.4f}, D(x): {D_x:.4f} D(G(z)): {D_G_z1:.4f} / {D_G_z2:.4f}'
+            
+            desp = f'Train - Epoch {epoch}/{args.epochs} - lr: {schedulerG.get_last_lr()[0]:.4f}, Loss_G: {loss_G.item():.4f}, Loss_D: {step:.4f}, D(x): {D_x:.4f} D(G(z)): {D_G_z1:.4f} / {D_G_z2:.4f}'
             tqdm_bar(pbar, desp)
             
         
