@@ -80,8 +80,6 @@ def test(args, netG, netD, evaluator, test_dataloader, device):
     return acc, grid
 
 
-
-
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description="Train")

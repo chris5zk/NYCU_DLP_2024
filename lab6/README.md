@@ -24,14 +24,6 @@ DCGAN 由作者 Radford 等人在《Unsupervised Representation Learning With De
 
 訓練的方法為上課簡報中的 pesudo code 提到的方法，在同一個 mini-batch 中，可以針對 Discriminator 訓練較多次，再訓練 Generator，因此我透過參數設定兩者的訓練比例，在最後的實驗章節會提到一些 ratio 調整上的比較。除了訓練次數不同外，我使用的是 soft label，只要在 0.7 ~ 1.0 的範圍就當作 True label，在 0.0 ~ 0.3 就當成 Fake label。最後也有在訓練 Discriminator 時，有一定的機率讓 True label 與 Fake label 交換，用於改善 discriminator 訓練太好的情況。
 
-### ACGAN
-
-ACGAN 的方法類似於 Diffusion model 中的 classifier-guided，Discriminator 中除了原本的預測機率分布以外，還加入 classifier 來增加分類正確性，加強生成圖片與條件之間的連結性，我是基於 DCGAN 下去改動的，Generator 與 DCGAN 相同，但在 Discriminator 改動 Convolution 的 kernel size, stride 等，並且加入 Dropout 來訓練，在最後加入兩個網路：一個輸出機率分布、一個輸出類別機率，用於監督模型生出正確類別的圖。
-
-| ![alt text](./att/ac_dis.png) | ![alt text](./att/ac_cls.png) |
-|:-----------------------------:|:-----------------------------:|
-|         Discriminator         |            Classifier         |
-
 ### Diffusion model
 
 Diffusion model 使用 Unet 當作學習的網路，在 Unet 中 Encoder 與 Decoder 的每一個 scale 都會加入 timestep 與 condition 進行 embedding 後，condition 會與 input feature 進行內積後加上 timestep embedding，為了要讓 feature 與 condition 貼合所以使用內積， timestep 用加的是類似於 positional embedding 的作法。而在 DDPM forward process 與 backward process 上，如引言中所說，是逐步加入雜訊的過程，在訓練時是隨機生成雜訊與 timestep，進行預測當下的雜訊。在 backward process 是用下圖中的 sample function 來實現，是從 Gaussian Noise 逐步採樣預測雜訊的過程。
@@ -54,15 +46,9 @@ Diffusion model 使用 Unet 當作學習的網路，在 Unet 中 Encoder 與 Dec
 
 #### DCGAN results
 
-|![alt text]()|![alt text]()|
-|:------------------------------:|:----------------------------------:|
-|      Test set(acc=)      |      New test set(acc=)      |
-
-#### ACGAN results
-
-|![alt text]()|![alt text]()|
-|:------------------------------:|:----------------------------------:|
-|      Test set(acc=)      |      New test set(acc=)      |
+|![alt text](./att/dc_test.png)|![alt text](./att/dc_new_test.png)|![alt text](./att/dc_run.png)|
+|:----------------------------:|:--------------------------------:|:---------------------------:|
+|     Test set(acc=0.4722)     |     New test set(acc=0.4524)     |       Running results       |
 
 #### Diffusion model results
 
@@ -80,6 +66,22 @@ Diffusion model 使用 Unet 當作學習的網路，在 Unet 中 Encoder 與 Dec
 
 - **圖片品質:** 在我的實驗中，GAN 很容易生成出奇怪的物體，Diffusion model 頂多是沒有顏色或生錯誤體而很少有物體變型的情況。品質上是 Diffusion model 更好。
 
-- **條件符合度:** 條件符合度是根據 condition 所指示要生成的物體，觀察結果兩者都沒有達到很好的吻合度，Diffusion model 略勝一籌，或許加入 classifier-guided 可以有效的改善這個問題，而 ACGAN 若是訓練時間更久一點，也能達到更吻合的條件，不過很有可能會犧牲圖片品質。
+- **條件符合度:** 條件符合度是根據 condition 所指示要生成的物體，觀察結果兩者都沒有達到很好的吻合度，Diffusion model 略勝一籌，或許加入 classifier-guided 可以有效的改善這個問題，又或者將 DCGAN 改為 ACGAN 也能達到更吻合的條件，不過很有可能會犧牲圖片品質。
 
 ### Extra imexperiments
+
+#### ACGAN
+
+除了 spec 中建議的 DCGAN 以外，我也實作 ACGAN 作為模型訓練比較，
+
+ACGAN 的方法類似於 Diffusion model 中的 classifier-guided，Discriminator 中除了原本的預測機率分布以外，還加入 classifier 來增加分類正確性，加強生成圖片與條件之間的連結性，我是基於 DCGAN 下去改動的，Generator 與 DCGAN 相同，但在 Discriminator 改動 Convolution 的 kernel size, stride 等，並且加入 Dropout 來訓練，在最後加入兩個網路：一個輸出機率分布、一個輸出類別機率，用於監督模型生出正確類別的圖。
+
+| ![alt text](./att/ac_dis.png) | ![alt text](./att/ac_cls.png) |
+|:-----------------------------:|:-----------------------------:|
+|         Discriminator         |            Classifier         |
+
+不過訓練時間需要很長的一段時間，因為時間的關係只有訓練 100 epoch，且模型的參數量較小，因此沒有達到預期的效果，反而比原本訓練很久的 DCGAN 還要來的差很多。
+
+|![alt text](./att/ac_test.png)|![alt text](./att/ac_new_test.png)|![alt text](./att/ac_run.png)|
+|:----------------------------:|:--------------------------------:|:---------------------------:|
+|      Test set(acc=0.1389)    |     New test set(acc=0.1429)     |       Running results       |
