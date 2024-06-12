@@ -49,6 +49,16 @@ def main(args):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.95, patience=5, min_lr=0, verbose=True)
     evaluator = evaluation_model(device)
     
+    # use checkpoints
+    if args.use_ckpt:
+        print(f'Using checkpoint: {args.ckpt_path}')
+        checkpoint = torch.load(args.ckpt_path)
+        ddpm.load_state_dict(checkpoint['ddpm'])
+        optimizer.load_state_dict(checkpoint['optim'])
+        scheduler.load_state_dict(checkpoint['scheduler'])
+    else:
+        print('>>> Train from scratch <<<')
+    
     # training loop
     train(args, device, ddpm, optimizer, scheduler, evaluator, 
           train_dataloader, test_dataloader, new_test_dataloader, ckpt_save_path, output_path)
@@ -175,7 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', '-e', type=int, default=200, help='maximum epoch to train')
     parser.add_argument('--lr', type=int, default=1e-4, help='learning rate')
     parser.add_argument('--use_ckpt', action='store_true', help='use checkpoint for training')
-    parser.add_argument('--ckpt_path', type=str, default='./checkpoint/epoch=20.ckpt')
+    parser.add_argument('--ckpt_path', type=str, default='./checkpoint/dm/ddpm_Epoch_200.ckpt')
     
     # saving param.
     parser.add_argument('--pt_save', type=int, default=10, help='model weight saving interval')

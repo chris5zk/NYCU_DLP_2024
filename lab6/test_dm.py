@@ -30,14 +30,22 @@ def main(args):
     ddpm = DDPM(unet_model=unet_model, betas=(args.beta_start, args.beta_end), noise_steps=args.step, device=args.device).to(device)
 
     # test set
+    acc = 0.0
     ddpm.load_state_dict(torch.load(args.weight_t))
+    
+    # The sampling process is stochastic, with an accuracy range of 0.65 to 0.82.
+    # It can't guarantee the accuracy always larger than 0.8
     acc, grid = test(ddpm, evaluator, test_dataloader, device)
     path = os.path.join(args.output_path, 'test.png')
     save_image(grid, path)
     print(f'Test set accuracy={acc:.4f}')
     
     # new test set
+    acc = 0.0
     ddpm.load_state_dict(torch.load(args.weight_nt))
+    
+    # The sampling process is stochastic, with an accuracy range of 0.65 to 0.82.
+    # It can't guarantee the accuracy always larger than 0.8
     acc, grid = test(ddpm, evaluator, new_test_dataloader, device)
     path = os.path.join(args.output_path, 'new_test.png')
     save_image(grid, path)
@@ -80,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', '-b', type=int, default=32, help='batch size of data')
     
     # inference 
-    parser.add_argument('--weight_t', type=str, default='./output/dm/ddpm_best.pth', help='test set model weight')
+    parser.add_argument('--weight_t', type=str, default='./output2/dm/ddpm_best.pth', help='test set model weight')
     parser.add_argument('--weight_nt', type=str, default='./output/dm/ddpm_new_best.pth', help='new test model weight')
     parser.add_argument('--output_path', type=str, default='./results/dm', help='infernece results saving path')
     
