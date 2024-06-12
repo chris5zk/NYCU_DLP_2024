@@ -278,7 +278,7 @@ if __name__ == '__main__':
     parser.add_argument('--Z_dims', type=int, default=100, help='latent dimension')
     parser.add_argument('--G_dims', type=int, default=300, help='generator feature dimension')
     parser.add_argument('--D_dims', type=int, default=100, help='discriminator feature dimension')
-    parser.add_argument('--ratio', type=int, default=3, help='update ratio, netD : netG')
+    parser.add_argument('--ratio', type=int, default=1, help='update ratio, netD : netG')
     parser.add_argument('--aux_w', type=int, default=1, help='aux. loss weight')
     
     # training hyperparam.

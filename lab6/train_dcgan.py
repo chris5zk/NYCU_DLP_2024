@@ -59,16 +59,6 @@ def main(args):
     netG = Generator(nz=args.Z_dims, ngf=args.G_dims, nc=args.c_dims, n_classes=args.num_class).to(device)
     netD = Discriminator(n_classes=args.num_class, ndf=args.D_dims, img_size=64).to(device)
     
-    # checkpoints
-    if args.use_ckpt:
-        print(f'Using checkpoint: {args.ckpt_path}')
-        netG.load_state_dict(torch.load(args.ckpt_path))
-        netD.load_state_dict(torch.load(args.ckpt_path))
-    else:
-        print('>>> Train from scratch <<<')
-        netG.apply(weights_init)
-        netD.apply(weights_init)
-    
     # loss
     criterion = nn.BCELoss()
     optimizerG = optim.Adam(netG.parameters(), lr=args.lr, betas=(0.5, 0.999))
@@ -76,6 +66,22 @@ def main(args):
     schedulerG = optim.lr_scheduler.ReduceLROnPlateau(optimizerG, mode='max', factor=0.95, patience=5, min_lr=0)
     schedulerD = optim.lr_scheduler.ReduceLROnPlateau(optimizerD, mode='max', factor=0.95, patience=5, min_lr=0)
     evaluator = evaluation_model(device)
+    
+    # checkpoints
+    if args.use_ckpt:
+        print(f'Using checkpoint: {args.ckpt_G_path}, {args.ckpt_D_path}')
+        ckpt_G = torch.load(args.ckpt_G_path)
+        ckpt_D = torch.load(args.ckpt_D_path)
+        netG.load_state_dict(ckpt_G['netG'])
+        netD.load_state_dict(ckpt_D['netD'])
+        optimizerG.load_state_dict(ckpt_G['optimG'])
+        optimizerD.load_state_dict(ckpt_D['optimD'])
+    else:
+        print('>>> Train from scratch <<<')
+        netG.apply(weights_init)
+        netD.apply(weights_init)
+    
+    
     
     # training loop
     train(args, netG, netD, optimizerG, optimizerD, schedulerD, schedulerG, criterion, evaluator, train_dataloader, test_dataloader, new_test_dataloader, device, ckpt_save_path, output_path)
@@ -270,20 +276,21 @@ if __name__ == '__main__':
     parser.add_argument('--Z_dims', type=int, default=100, help='latent dimension')
     parser.add_argument('--G_dims', type=int, default=300, help='generator feature dimension')
     parser.add_argument('--D_dims', type=int, default=100, help='discriminator feature dimension')
-    parser.add_argument('--ratio', type=int, default=3, help='update ratio, netD : netG')
+    parser.add_argument('--ratio', type=int, default=1, help='update ratio, netD : netG')
     
     # training hyperparam.
     parser.add_argument('--device', type=str, default='cuda:0', help='device you choose to use')
     parser.add_argument('--num_workers', '-nw',type=int, default=8, help='numbers of workers')
     parser.add_argument('--batch_size', '-b', type=int, default=128, help='batch size of data')
-    parser.add_argument('--epochs', '-e', type=int, default=200, help='maximum epoch to train')
+    parser.add_argument('--epochs', '-e', type=int, default=300, help='maximum epoch to train')
     parser.add_argument('--lr', type=int, default=1e-4, help='learning rate')
     parser.add_argument('--use_ckpt', action='store_true', help='use checkpoint for training')
-    parser.add_argument('--ckpt_path', type=str, default='./checkpoint/epoch=20.ckpt')
+    parser.add_argument('--ckpt_G_path', type=str, default='./checkpoint/dcgan/netG_Epoch_200.ckpt')
+    parser.add_argument('--ckpt_D_path', type=str, default='./checkpoint/dcgan/netD_Epoch_200.ckpt')
     
     # saving param.
-    parser.add_argument('--pt_save', type=int, default=20, help='model weight saving interval')
-    parser.add_argument('--ckpt_save', type=int, default=10, help='checkpoint saving interval')
+    parser.add_argument('--pt_save', type=int, default=50, help='model weight saving interval')
+    parser.add_argument('--ckpt_save', type=int, default=25, help='checkpoint saving interval')
     parser.add_argument('--output', type=str, default='./output', help='training results saving path')
     parser.add_argument('--output_ckpt', type=str, default='./checkpoint', help='training results saving path')
     
