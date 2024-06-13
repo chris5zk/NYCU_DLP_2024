@@ -103,7 +103,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', '-b', type=int, default=32, help='batch size of data')
     
     # path
-    parser.add_argument('--weight_path', type=str, default='./output2/dcgan', help='GAN weight root path')
+    parser.add_argument('--weight_path', type=str, default='./output/dcgan', help='GAN weight root path')
     parser.add_argument('--output_path', type=str, default='./results/dcgan', help='infernece results saving path')
     
     args = parser.parse_args()

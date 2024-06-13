@@ -37,7 +37,7 @@ def main(args):
     
     # test set
     acc = 0.0
-    netG.load_state_dict(torch.load(os.path.join(root, 'Epoch_75', 'netG_Epoch_75.pth')))
+    netG.load_state_dict(torch.load(os.path.join(root, 'netG_best.pth')))
     
     acc, grid = test(args, netG, evaluator, test_dataloader, device)
     path = os.path.join(args.output_path, 'test.png')
@@ -48,7 +48,7 @@ def main(args):
     
     # new test set
     acc = 0.0
-    netG.load_state_dict(torch.load(os.path.join(root, 'Epoch_75', 'netG_Epoch_75.pth')))
+    netG.load_state_dict(torch.load(os.path.join(root, 'netG_new_best.pth')))
     
     acc, grid = test(args, netG, evaluator, new_test_dataloader, device)
     path = os.path.join(args.output_path, 'new_test.png')
@@ -90,8 +90,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_class', type=int, default=24, help='numbers of class')
     parser.add_argument('--c_dims', type=int, default=100, help='condition dimension')
     parser.add_argument('--Z_dims', type=int, default=100, help='latent dimension')
-    parser.add_argument('--G_dims', type=int, default=64, help='generator feature dimension')
-    parser.add_argument('--D_dims', type=int, default=64, help='discriminator feature dimension')
+    parser.add_argument('--G_dims', type=int, default=200, help='generator feature dimension')
+    parser.add_argument('--D_dims', type=int, default=200, help='discriminator feature dimension')
 
     # inference 
     parser.add_argument('--device', type=str, default='cuda:1', help='device you choose to use')

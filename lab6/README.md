@@ -48,15 +48,15 @@ Diffusion model 使用 Unet 當作學習的網路，在 Unet 中 Encoder 與 Dec
 
 |![alt text](./att/dc_test.png)|![alt text](./att/dc_new_test.png)|![alt text](./att/dc_run.png)|
 |:----------------------------:|:--------------------------------:|:---------------------------:|
-|     Test set(acc=0.4722)     |     New test set(acc=0.4524)     |       Running results       |
+|     Test set(acc=0.4444)     |     New test set(acc=0.5000)     |       Running results       |
 
 #### Diffusion model results
 
 |![alt text](./att/ddpm_test.png)|![alt text](./att/ddpm_new_test.png)|
 |:------------------------------:|:----------------------------------:|
 |      Test set(acc=0.8194)      |      New test set(acc=0.8095)      |
-|![alt text](./att/ddpm_run.png) |![alt text](./att/new_test_process.png)![alt text](./att/test_process.png)|
-|         Running results        |          Denoising process         |
+|![alt text](./att/ddpm_run.png) |![alt text](./att/test_process.png)![alt text](./att/new_test_process.png)|
+|         Running results        |   Denoising process (up:test, down:new test)        |
 
 ### Pons and cons
 

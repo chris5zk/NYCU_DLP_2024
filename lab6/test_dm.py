@@ -1,6 +1,8 @@
 # inference diffusion model
 import os
+import json
 import argparse
+import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
@@ -29,17 +31,29 @@ def main(args):
     unet_model = Unet().to(args.device)
     ddpm = DDPM(unet_model=unet_model, betas=(args.beta_start, args.beta_end), noise_steps=args.step, device=args.device).to(device)
 
+    # condition
+    condition =  ['red sphere', 'yellow cube', 'cyan cylinder']
+    
+    object_class_id = json.load(open(os.path.join(args.root, 'objects.json')))
+    one_hot_vector = torch.zeros(len(object_class_id))
+    for obj in condition:
+        one_hot_vector[object_class_id[obj]] = 1
+    print(one_hot_vector)
+
     # test set
     acc = 0.0
     ddpm.load_state_dict(torch.load(args.weight_t))
     
     # The sampling process is stochastic, with an accuracy range of 0.69 to 0.82.
     # It can't guarantee the accuracy always larger than 0.8
+    acc, grid, grid_step = test(ddpm, evaluator, [one_hot_vector], device)
+    path = os.path.join(args.output_path, 'test_process.png')
+    save_image(grid_step, path)
+    
     acc, grid, grid_step = test(ddpm, evaluator, test_dataloader, device)
     path = os.path.join(args.output_path, 'test.png')
     save_image(grid, path)
-    path = os.path.join(args.output_path, 'test_process.png')
-    save_image(grid_step, path)
+
     print(f'Test set accuracy={acc:.4f}')
     
     # new test set
@@ -48,15 +62,21 @@ def main(args):
     
     # The sampling process is stochastic, with an accuracy range of 0.69 to 0.82.
     # It can't guarantee the accuracy always larger than 0.8
-    acc, grid, grid_step = test(ddpm, evaluator, new_test_dataloader, device)
-    path = os.path.join(args.output_path, 'new_test.png')
-    save_image(grid, path)
+    acc, grid, grid_step = test(ddpm, evaluator, [one_hot_vector], device)
     path = os.path.join(args.output_path, 'new_test_process.png')
     save_image(grid_step, path)
     
+    acc, grid, grid_step = test(ddpm, evaluator, new_test_dataloader, device)
+    path = os.path.join(args.output_path, 'new_test.png')
+    save_image(grid, path)
+    
     print(f'New test set accuracy={acc:.4f}')
     
-
+    
+    
+    # denoising process
+    
+    
 def test(ddpm, evaluator, test_dataloader, device):
     ddpm.eval()
     x_gen, label = [], []
