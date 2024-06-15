@@ -9,3 +9,5 @@
 ## Lab4: Conditional VAE for Video Prediction
 
 ## Lab5: MaskGIT for Omage Inpainting
+
+## Lab6: Generative Models
